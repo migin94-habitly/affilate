@@ -74,12 +74,12 @@ func main() {
 
 	adminAuth := adminhandler.NewAuthHandler(authSvc, adminRepo)
 	adminPartners := adminhandler.NewPartnersHandler(partnerRepo, adminRepo)
-	adminComm := adminhandler.NewCommissionsHandler(commSvc, commRepo)
+	adminComm := adminhandler.NewCommissionsHandler(commSvc, commRepo, adminRepo)
 	adminPayouts := adminhandler.NewAdminPayoutsHandler(payoutSvc)
 	adminAnalytics := adminhandler.NewAnalyticsHandler(adminRepo)
 	adminDocs := adminhandler.NewAdminDocumentsHandler(docSvc, adminRepo)
 	adminFraud := adminhandler.NewFraudHandler(trackingRepo)
-	adminEvents := adminhandler.NewAdminEventsHandler(eventRepo)
+	adminEvents := adminhandler.NewAdminEventsHandler(eventRepo, adminRepo)
 
 	// Router
 	r := chi.NewRouter()
@@ -161,7 +161,9 @@ func main() {
 		r.Patch("/api/v1/admin/partners/{id}/tier", adminPartners.UpdateTier)
 
 		r.Get("/api/v1/admin/tariffs", adminComm.GetTariffs)
-		r.Put("/api/v1/admin/tariffs", adminComm.UpdateTariff)
+		// Mass tier-rate change requires finance or super_admin (PRD §5.5 guardrail #4).
+		r.With(middleware.RequireAdmin(cfg.JWT.Secret, "finance", "super_admin")).
+			Put("/api/v1/admin/tariffs", adminComm.UpdateTariff)
 		r.Get("/api/v1/admin/commissions", adminComm.List)
 		r.Post("/api/v1/admin/commissions/approve-all", adminComm.ApproveAll)
 

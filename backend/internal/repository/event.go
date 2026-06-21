@@ -178,6 +178,22 @@ func (r *EventRepo) ListAll(ctx context.Context, filter EventFilter) ([]*domain.
 	return events, total, nil
 }
 
+// GetByIDAdmin returns any event regardless of active status; for admin-only use.
+func (r *EventRepo) GetByIDAdmin(ctx context.Context, id uuid.UUID) (*domain.Event, error) {
+	e := &domain.Event{}
+	err := r.db.QueryRow(ctx, `
+		SELECT id, external_id, title, city, category, event_date, venue, image_url,
+		       base_url, min_price, currency, service_fee_pct, is_active, special_rate, created_at, updated_at
+		FROM events WHERE id=$1`, id).
+		Scan(&e.ID, &e.ExternalID, &e.Title, &e.City, &e.Category, &e.Date,
+			&e.Venue, &e.ImageURL, &e.BaseURL, &e.MinPrice, &e.Currency,
+			&e.ServiceFeePct, &e.IsActive, &e.SpecialRate, &e.CreatedAt, &e.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	return e, err
+}
+
 func (r *EventRepo) UpdateSpecialRate(ctx context.Context, id uuid.UUID, rate *float64) error {
 	_, err := r.db.Exec(ctx,
 		"UPDATE events SET special_rate=$2, updated_at=NOW() WHERE id=$1", id, rate)

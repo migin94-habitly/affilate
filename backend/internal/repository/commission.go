@@ -45,12 +45,19 @@ func (r *CommissionRepo) GetByPartner(ctx context.Context, partnerID uuid.UUID, 
 	return scanCommissions(rows, total)
 }
 
-func (r *CommissionRepo) GetTariff(ctx context.Context, tier domain.PartnerTier) (*domain.Tariff, error) {
+const tariffSelectCols = `id, tier, gmv_rate, base_rate, min_orders_for_silver, cpa_bonus,
+	pending_gmv_rate, rate_effective_at, rate_change_reason, updated_at`
+
+func scanTariff(row pgx.Row) (*domain.Tariff, error) {
 	t := &domain.Tariff{}
-	err := r.db.QueryRow(ctx, `
-		SELECT id, tier, base_rate, min_orders_for_silver, cpa_bonus, updated_at
-		FROM tariffs WHERE tier=$1`, tier).
-		Scan(&t.ID, &t.Tier, &t.BaseRate, &t.MinOrdersForSilver, &t.CPABonus, &t.UpdatedAt)
+	err := row.Scan(&t.ID, &t.Tier, &t.GmvRate, &t.BaseRate, &t.MinOrdersForSilver, &t.CPABonus,
+		&t.PendingGmvRate, &t.RateEffectiveAt, &t.RateChangeReason, &t.UpdatedAt)
+	return t, err
+}
+
+func (r *CommissionRepo) GetTariff(ctx context.Context, tier domain.PartnerTier) (*domain.Tariff, error) {
+	row := r.db.QueryRow(ctx, `SELECT `+tariffSelectCols+` FROM tariffs WHERE tier=$1`, tier)
+	t, err := scanTariff(row)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, domain.ErrNotFound
 	}
@@ -58,7 +65,7 @@ func (r *CommissionRepo) GetTariff(ctx context.Context, tier domain.PartnerTier)
 }
 
 func (r *CommissionRepo) GetAllTariffs(ctx context.Context) ([]*domain.Tariff, error) {
-	rows, err := r.db.Query(ctx, "SELECT id, tier, base_rate, min_orders_for_silver, cpa_bonus, updated_at FROM tariffs ORDER BY tier")
+	rows, err := r.db.Query(ctx, `SELECT `+tariffSelectCols+` FROM tariffs ORDER BY tier`)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +73,8 @@ func (r *CommissionRepo) GetAllTariffs(ctx context.Context) ([]*domain.Tariff, e
 	var tariffs []*domain.Tariff
 	for rows.Next() {
 		t := &domain.Tariff{}
-		if err := rows.Scan(&t.ID, &t.Tier, &t.BaseRate, &t.MinOrdersForSilver, &t.CPABonus, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.Tier, &t.GmvRate, &t.BaseRate, &t.MinOrdersForSilver, &t.CPABonus,
+			&t.PendingGmvRate, &t.RateEffectiveAt, &t.RateChangeReason, &t.UpdatedAt); err != nil {
 			return nil, err
 		}
 		tariffs = append(tariffs, t)
@@ -76,9 +84,50 @@ func (r *CommissionRepo) GetAllTariffs(ctx context.Context) ([]*domain.Tariff, e
 
 func (r *CommissionRepo) UpdateTariff(ctx context.Context, t *domain.Tariff) error {
 	_, err := r.db.Exec(ctx, `
-		UPDATE tariffs SET base_rate=$2, min_orders_for_silver=$3, cpa_bonus=$4, updated_at=NOW()
-		WHERE tier=$1`, t.Tier, t.BaseRate, t.MinOrdersForSilver, t.CPABonus)
+		UPDATE tariffs
+		SET gmv_rate=$2, base_rate=$3, min_orders_for_silver=$4, cpa_bonus=$5,
+		    pending_gmv_rate=$6, rate_effective_at=$7, rate_change_reason=$8, updated_at=NOW()
+		WHERE tier=$1`,
+		t.Tier, t.GmvRate, t.BaseRate, t.MinOrdersForSilver, t.CPABonus,
+		t.PendingGmvRate, t.RateEffectiveAt, t.RateChangeReason,
+	)
 	return err
+}
+
+// ApplyPendingRates promotes any pending rate decreases whose effective_at has passed.
+func (r *CommissionRepo) ApplyPendingRates(ctx context.Context, defaultSFPct float64) error {
+	rows, err := r.db.Query(ctx, `
+		SELECT tier, pending_gmv_rate FROM tariffs
+		WHERE pending_gmv_rate IS NOT NULL AND rate_effective_at <= NOW()`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	type pending struct {
+		tier    string
+		gmvRate float64
+	}
+	var toApply []pending
+	for rows.Next() {
+		var p pending
+		if err := rows.Scan(&p.tier, &p.gmvRate); err != nil {
+			return err
+		}
+		toApply = append(toApply, p)
+	}
+
+	for _, p := range toApply {
+		sfRate := p.gmvRate / defaultSFPct * 100
+		_, err := r.db.Exec(ctx, `
+			UPDATE tariffs
+			SET gmv_rate=$2, base_rate=$3, pending_gmv_rate=NULL, rate_effective_at=NULL, updated_at=NOW()
+			WHERE tier=$1`, p.tier, p.gmvRate, sfRate)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *CommissionRepo) GetEventSpecialRate(ctx context.Context, eventID uuid.UUID) (*float64, error) {
