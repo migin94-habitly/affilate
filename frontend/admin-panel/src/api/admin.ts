@@ -72,3 +72,33 @@ export const getDocumentDownloadUrl = (id: string) =>
 // Fraud
 export const getFraudSignals = () =>
   api.get('/admin/fraud/signals').then(r => r.data)
+
+// Events
+export const getAdminEvents = (params: any) =>
+  api.get('/admin/events', { params }).then(r => r.data)
+
+// FAQ
+export const getFAQ = () =>
+  api.get('/admin/faq').then(r => r.data)
+
+export const createFAQ = (data: any) =>
+  api.post('/admin/faq', data).then(r => r.data)
+
+export const updateFAQ = (id: string, data: any) =>
+  api.put(`/admin/faq/${id}`, data).then(r => r.data)
+
+export const deleteFAQ = (id: string) =>
+  api.delete(`/admin/faq/${id}`).then(r => r.data)
+
+// Contacts
+export const getContacts = () =>
+  api.get('/admin/contacts').then(r => r.data)
+
+export const createContact = (data: any) =>
+  api.post('/admin/contacts', data).then(r => r.data)
+
+export const updateContact = (id: string, data: any) =>
+  api.put(`/admin/contacts/${id}`, data).then(r => r.data)
+
+export const deleteContact = (id: string) =>
+  api.delete(`/admin/contacts/${id}`).then(r => r.data)

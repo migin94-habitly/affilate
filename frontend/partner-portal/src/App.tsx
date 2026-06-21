@@ -10,6 +10,8 @@ import { PayoutsPage } from '@/pages/PayoutsPage'
 import { DocumentsPage } from '@/pages/DocumentsPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { PromoCodesPage } from '@/pages/PromoCodesPage'
+import { NotificationsPage } from '@/pages/NotificationsPage'
+import { FAQPage } from '@/pages/FAQPage'
 import '@/i18n'
 
 const qc = new QueryClient({
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="/documents" element={<ProtectedRoute><DocumentsPage /></ProtectedRoute>} />
           <Route path="/promo-codes" element={<ProtectedRoute><PromoCodesPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/faq" element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

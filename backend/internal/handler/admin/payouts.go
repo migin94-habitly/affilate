@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"net/http"
@@ -15,11 +16,13 @@ import (
 )
 
 type AdminPayoutsHandler struct {
-	payoutSvc *service.PayoutService
+	payoutSvc  *service.PayoutService
+	payoutRepo *repository.PayoutRepo
+	notifRepo  *repository.NotificationRepo
 }
 
-func NewAdminPayoutsHandler(ps *service.PayoutService) *AdminPayoutsHandler {
-	return &AdminPayoutsHandler{payoutSvc: ps}
+func NewAdminPayoutsHandler(ps *service.PayoutService, pr *repository.PayoutRepo, nr *repository.NotificationRepo) *AdminPayoutsHandler {
+	return &AdminPayoutsHandler{payoutSvc: ps, payoutRepo: pr, notifRepo: nr}
 }
 
 func (h *AdminPayoutsHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +38,9 @@ func (h *AdminPayoutsHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	handler.JSON(w, http.StatusOK, map[string]interface{}{
-		"items":   items,
-		"total":   total,
-		"page":    filter.Page,
+		"items":    items,
+		"total":    total,
+		"page":     filter.Page,
 		"per_page": filter.PerPage,
 	})
 }
@@ -58,10 +61,20 @@ func (h *AdminPayoutsHandler) UpdateStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Fetch payout before updating to get partner_id for notification
+	payout, err := h.payoutRepo.GetByID(r.Context(), id)
+	if err != nil {
+		handler.Error(w, err)
+		return
+	}
+
 	if err := h.payoutSvc.UpdateStatus(r.Context(), id, input.Status, input.FreedomPayRef); err != nil {
 		handler.Error(w, err)
 		return
 	}
+
+	go h.sendPayoutNotification(payout.PartnerID, payout.Amount, input.Status)
+
 	handler.JSON(w, http.StatusOK, map[string]string{"status": string(input.Status)})
 }
 
@@ -92,4 +105,36 @@ func (h *AdminPayoutsHandler) ExportCSV(w http.ResponseWriter, r *http.Request) 
 		})
 	}
 	writer.Flush()
+}
+
+func (h *AdminPayoutsHandler) sendPayoutNotification(partnerID uuid.UUID, amount float64, status domain.PayoutStatus) {
+	ctx := context.Background()
+	amountStr := fmt.Sprintf("%.0f ₸", amount)
+	var notif *domain.Notification
+	switch status {
+	case domain.PayoutProcessing:
+		notif = &domain.Notification{
+			PartnerID: partnerID,
+			Type:      "payout_processing",
+			Title:     "Выплата обрабатывается",
+			Body:      fmt.Sprintf("Ваша выплата на сумму %s принята в обработку через Freedom Pay.", amountStr),
+		}
+	case domain.PayoutPaid:
+		notif = &domain.Notification{
+			PartnerID: partnerID,
+			Type:      "payout_paid",
+			Title:     "Выплата успешно выполнена",
+			Body:      fmt.Sprintf("Выплата на сумму %s успешно переведена на ваш Freedom Pay аккаунт.", amountStr),
+		}
+	case domain.PayoutFailed:
+		notif = &domain.Notification{
+			PartnerID: partnerID,
+			Type:      "payout_failed",
+			Title:     "Ошибка выплаты",
+			Body:      fmt.Sprintf("Выплата на сумму %s не была выполнена. Средства возвращены на ваш баланс. Свяжитесь с поддержкой.", amountStr),
+		}
+	default:
+		return
+	}
+	_ = h.notifRepo.Create(ctx, notif)
 }

@@ -1,10 +1,12 @@
 package admin
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/ticketon/tap/internal/domain"
 	"github.com/ticketon/tap/internal/handler"
 	"github.com/ticketon/tap/internal/middleware"
 	"github.com/ticketon/tap/internal/repository"
@@ -14,10 +16,11 @@ import (
 type AdminDocumentsHandler struct {
 	docSvc    *service.DocumentService
 	adminRepo *repository.AdminRepo
+	notifRepo *repository.NotificationRepo
 }
 
-func NewAdminDocumentsHandler(ds *service.DocumentService, ar *repository.AdminRepo) *AdminDocumentsHandler {
-	return &AdminDocumentsHandler{docSvc: ds, adminRepo: ar}
+func NewAdminDocumentsHandler(ds *service.DocumentService, ar *repository.AdminRepo, nr *repository.NotificationRepo) *AdminDocumentsHandler {
+	return &AdminDocumentsHandler{docSvc: ds, adminRepo: ar, notifRepo: nr}
 }
 
 func (h *AdminDocumentsHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +59,9 @@ func (h *AdminDocumentsHandler) Sign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch before signing to get partner_id for notification
+	doc, _ := h.docSvc.GetByID(r.Context(), id)
+
 	if err := h.docSvc.AdminSign(r.Context(), id, input.TicketonFileURL, input.FinalFileURL); err != nil {
 		handler.Error(w, err)
 		return
@@ -63,6 +69,17 @@ func (h *AdminDocumentsHandler) Sign(w http.ResponseWriter, r *http.Request) {
 
 	adminID := middleware.GetAdminID(r.Context())
 	h.adminRepo.LogAudit(r.Context(), "admin", adminID, "sign_document", "legal_document", &id)
+
+	if doc != nil {
+		go func() {
+			_ = h.notifRepo.Create(context.Background(), &domain.Notification{
+				PartnerID: doc.PartnerID,
+				Type:      "document_signed",
+				Title:     "Документ подписан со стороны Ticketon",
+				Body:      "Ваш партнёрский договор подписан Ticketon. Финальный документ доступен для скачивания в разделе «Документы».",
+			})
+		}()
+	}
 
 	handler.JSON(w, http.StatusOK, map[string]bool{"signed": true})
 }
@@ -82,10 +99,25 @@ func (h *AdminDocumentsHandler) Reject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch before rejecting to get partner_id for notification
+	doc, _ := h.docSvc.GetByID(r.Context(), id)
+
 	if err := h.docSvc.AdminReject(r.Context(), id, input.Reason); err != nil {
 		handler.Error(w, err)
 		return
 	}
+
+	if doc != nil {
+		go func() {
+			_ = h.notifRepo.Create(context.Background(), &domain.Notification{
+				PartnerID: doc.PartnerID,
+				Type:      "document_rejected",
+				Title:     "Документ отклонён",
+				Body:      "Ваш документ был отклонён. Проверьте раздел «Документы» для получения причины и повторной загрузки.",
+			})
+		}()
+	}
+
 	handler.JSON(w, http.StatusOK, map[string]bool{"rejected": true})
 }
 
