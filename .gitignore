@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.local
+
+# Go
+backend/tap-server
+
+# IDE
+.idea/
+.vscode/
+*.swp
