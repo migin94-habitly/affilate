@@ -99,12 +99,19 @@ type Event struct {
 // --- Tariffs ---
 
 type Tariff struct {
-	ID                  uuid.UUID `json:"id"`
-	Tier                PartnerTier `json:"tier"`
-	BaseRate            float64   `json:"base_rate"`
-	MinOrdersForSilver  int       `json:"min_orders_for_silver"`
-	CPABonus            float64   `json:"cpa_bonus"`
-	UpdatedAt           time.Time `json:"updated_at"`
+	ID                 uuid.UUID  `json:"id"`
+	Tier               PartnerTier `json:"tier"`
+	// GmvRate is the partner-visible commission rate as % of order total (GMV) — source of truth per PRD §5.2.
+	GmvRate            float64    `json:"gmv_rate"`
+	// BaseRate is the derived internal rate as % of Ticketon Service Fee (auto-calculated from GmvRate).
+	BaseRate           float64    `json:"base_rate"`
+	MinOrdersForSilver int        `json:"min_orders_for_silver"`
+	CPABonus           float64    `json:"cpa_bonus"`
+	// PendingGmvRate holds a scheduled rate decrease until RateEffectiveAt (PRD §5.5 guardrail #3).
+	PendingGmvRate     *float64   `json:"pending_gmv_rate,omitempty"`
+	RateEffectiveAt    *time.Time `json:"rate_effective_at,omitempty"`
+	RateChangeReason   *string    `json:"rate_change_reason,omitempty"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }
 
 // --- Tracking ---
