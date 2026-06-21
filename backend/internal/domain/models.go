@@ -303,6 +303,19 @@ type ChannelAnalytics struct {
 	AffiliateCAC      float64 `json:"affiliate_cac"`
 }
 
+// --- Promo Codes ---
+
+type PromoCode struct {
+	ID        uuid.UUID  `json:"id"`
+	Code      string     `json:"code"`
+	PartnerID uuid.UUID  `json:"partner_id"`
+	EventID   *uuid.UUID `json:"event_id,omitempty"`
+	IsActive  bool       `json:"is_active"`
+	UsesCount int        `json:"uses_count"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+}
+
 // --- Pagination ---
 
 type PaginatedResult[T any] struct {

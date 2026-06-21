@@ -126,6 +126,46 @@ func (s *AuthService) issuePartnerTokens(partner *domain.Partner) (*AuthResult, 
 	return &AuthResult{Token: token, RefreshToken: refresh, Partner: partner}, nil
 }
 
+func (s *AuthService) RefreshPartnerToken(ctx context.Context, refreshToken string) (*AuthResult, error) {
+	partnerID, err := s.validateRefreshToken(refreshToken, "partner")
+	if err != nil {
+		return nil, domain.ErrInvalidCredentials
+	}
+	partner, err := s.partnerRepo.GetByID(ctx, partnerID)
+	if err != nil {
+		return nil, domain.ErrNotFound
+	}
+	if partner.Status == domain.StatusBanned {
+		return nil, domain.ErrPartnerSuspended
+	}
+	return s.issuePartnerTokens(partner)
+}
+
+func (s *AuthService) validateRefreshToken(tokenStr, expectedType string) (uuid.UUID, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(s.cfg.Secret), nil
+	})
+	if err != nil || !token.Valid {
+		return uuid.Nil, fmt.Errorf("invalid token")
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return uuid.Nil, fmt.Errorf("invalid claims")
+	}
+	if claims["type"] != expectedType {
+		return uuid.Nil, fmt.Errorf("wrong token type")
+	}
+	sub, _ := claims["sub"].(string)
+	id, err := uuid.Parse(sub)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid subject")
+	}
+	return id, nil
+}
+
 func (s *AuthService) signToken(subject, tokenType, role string, expiryHours int) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  subject,

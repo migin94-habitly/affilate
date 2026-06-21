@@ -126,6 +126,70 @@ func (r *EventRepo) GetCategories(ctx context.Context) ([]string, error) {
 	return cats, nil
 }
 
+// ListAll returns all events (including inactive) for admin management.
+func (r *EventRepo) ListAll(ctx context.Context, filter EventFilter) ([]*domain.Event, int64, error) {
+	where := "WHERE 1=1"
+	args := []interface{}{}
+	i := 1
+
+	if filter.City != "" {
+		where += fmt.Sprintf(" AND city=$%d", i)
+		args = append(args, filter.City)
+		i++
+	}
+	if filter.Category != "" {
+		where += fmt.Sprintf(" AND category=$%d", i)
+		args = append(args, filter.Category)
+		i++
+	}
+	if filter.Search != "" {
+		where += fmt.Sprintf(" AND title ILIKE $%d", i)
+		args = append(args, "%"+filter.Search+"%")
+		i++
+	}
+
+	var total int64
+	if err := r.db.QueryRow(ctx, "SELECT COUNT(*) FROM events "+where, args...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	offset := (filter.Page - 1) * filter.PerPage
+	args = append(args, filter.PerPage, offset)
+	rows, err := r.db.Query(ctx, `
+		SELECT id, external_id, title, city, category, event_date, venue, image_url,
+		       base_url, min_price, currency, service_fee_pct, is_active, special_rate, created_at, updated_at
+		FROM events `+where+fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", i, i+1),
+		args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var events []*domain.Event
+	for rows.Next() {
+		e := &domain.Event{}
+		if err := rows.Scan(&e.ID, &e.ExternalID, &e.Title, &e.City, &e.Category, &e.Date,
+			&e.Venue, &e.ImageURL, &e.BaseURL, &e.MinPrice, &e.Currency,
+			&e.ServiceFeePct, &e.IsActive, &e.SpecialRate, &e.CreatedAt, &e.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+		events = append(events, e)
+	}
+	return events, total, nil
+}
+
+func (r *EventRepo) UpdateSpecialRate(ctx context.Context, id uuid.UUID, rate *float64) error {
+	_, err := r.db.Exec(ctx,
+		"UPDATE events SET special_rate=$2, updated_at=NOW() WHERE id=$1", id, rate)
+	return err
+}
+
+func (r *EventRepo) SetActive(ctx context.Context, id uuid.UUID, isActive bool) error {
+	_, err := r.db.Exec(ctx,
+		"UPDATE events SET is_active=$2, updated_at=NOW() WHERE id=$1", id, isActive)
+	return err
+}
+
 func (r *EventRepo) GetCities(ctx context.Context) ([]string, error) {
 	rows, err := r.db.Query(ctx,
 		"SELECT DISTINCT city FROM events WHERE is_active=TRUE AND city != '' ORDER BY city")

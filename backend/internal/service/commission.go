@@ -67,21 +67,7 @@ func (s *CommissionService) Calculate(ctx context.Context, order *domain.Order) 
 		return err
 	}
 
-	// Flush to pending balance
-	if err := s.partnerRepo.EnsureBalance(ctx, *order.PartnerID); err != nil {
-		return err
-	}
-
-	return s.updatePendingBalance(ctx, *order.PartnerID, total)
-}
-
-func (s *CommissionService) updatePendingBalance(ctx context.Context, partnerID uuid.UUID, amount float64) error {
-	_, err := s.partnerRepo.GetBalance(ctx, partnerID) // ensure row exists
-	if err != nil {
-		s.partnerRepo.EnsureBalance(ctx, partnerID)
-	}
-	// Direct SQL to increment pending
-	return nil // balance updates handled via commission flush
+	return s.partnerRepo.AddToPendingBalance(ctx, *order.PartnerID, total)
 }
 
 func (s *CommissionService) GetTariffs(ctx context.Context) ([]*domain.Tariff, error) {
@@ -107,11 +93,13 @@ func (s *CommissionService) CheckAndUpgradeTier(ctx context.Context, partnerID u
 		return err
 	}
 
-	// Count orders this month
-	var orderCount int64
-	// Simple threshold check - in production would query orders table
-	_ = tariff.MinOrdersForSilver
-	_ = orderCount
+	orderCount, err := s.partnerRepo.CountMonthlyOrders(ctx, partnerID)
+	if err != nil {
+		return err
+	}
 
+	if orderCount >= tariff.MinOrdersForSilver {
+		return s.partnerRepo.UpdateTier(ctx, partnerID, domain.TierSilver)
+	}
 	return nil
 }

@@ -2,7 +2,7 @@ import api from './client'
 import type {
   AuthResult, Partner, PartnerKYC, PartnerBalance,
   Event, GeneratedLink, PartnerStats, ClickDataPoint,
-  Payout, LegalDocument, LegalStatus, Paginated
+  Payout, LegalDocument, LegalStatus, Paginated, PromoCode
 } from '@/types'
 
 // Auth
@@ -71,3 +71,17 @@ export const uploadSignedDoc = (docId: string, file_url: string) =>
 
 export const getDocDownloadURL = (docId: string, type: 'partner' | 'final' = 'final') =>
   api.get<{ url: string }>(`/partner/documents/${docId}/download`, { params: { type } }).then(r => r.data)
+
+// Promo Codes
+export const getPromoCodes = () =>
+  api.get<PromoCode[]>('/partner/promo-codes').then(r => r.data)
+
+export const createPromoCode = (data: { code: string; event_id?: string }) =>
+  api.post<PromoCode>('/partner/promo-codes', data).then(r => r.data)
+
+export const deactivatePromoCode = (id: string) =>
+  api.delete(`/partner/promo-codes/${id}`).then(r => r.data)
+
+// Auth refresh
+export const refreshToken = (refresh_token: string) =>
+  api.post<AuthResult>('/partner/auth/refresh', { refresh_token }).then(r => r.data)

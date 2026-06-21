@@ -52,11 +52,12 @@ func main() {
 	payoutRepo := repository.NewPayoutRepo(pool)
 	docRepo := repository.NewDocumentRepo(pool)
 	adminRepo := repository.NewAdminRepo(pool)
+	promoRepo := repository.NewPromoRepo(pool)
 
 	// Services
 	authSvc := service.NewAuthService(partnerRepo, adminRepo, &cfg.JWT)
 	commSvc := service.NewCommissionService(commRepo, partnerRepo)
-	trackingSvc := service.NewTrackingService(trackingRepo, partnerRepo, eventRepo, commSvc, &cfg.Tracking)
+	trackingSvc := service.NewTrackingService(trackingRepo, partnerRepo, eventRepo, promoRepo, commSvc, &cfg.Tracking)
 	payoutSvc := service.NewPayoutService(payoutRepo, partnerRepo, commRepo, &cfg.Payout)
 	docSvc := service.NewDocumentService(docRepo, partnerRepo)
 
@@ -67,6 +68,7 @@ func main() {
 	partnerLinks := partner.NewLinksHandler(trackingSvc)
 	partnerPayouts := partner.NewPayoutsHandler(payoutSvc)
 	partnerDocs := partner.NewDocumentsHandler(docSvc)
+	partnerPromos := partner.NewPromosHandler(promoRepo)
 
 	trackHandler := tracking.NewTrackHandler(trackingSvc)
 
@@ -77,6 +79,7 @@ func main() {
 	adminAnalytics := adminhandler.NewAnalyticsHandler(adminRepo)
 	adminDocs := adminhandler.NewAdminDocumentsHandler(docSvc, adminRepo)
 	adminFraud := adminhandler.NewFraudHandler(trackingRepo)
+	adminEvents := adminhandler.NewAdminEventsHandler(eventRepo)
 
 	// Router
 	r := chi.NewRouter()
@@ -110,6 +113,7 @@ func main() {
 	// Partner auth (public)
 	r.Post("/api/v1/partner/auth/register", partnerAuth.Register)
 	r.Post("/api/v1/partner/auth/login", partnerAuth.Login)
+	r.Post("/api/v1/partner/auth/refresh", partnerAuth.Refresh)
 
 	// Partner protected routes
 	r.Group(func(r chi.Router) {
@@ -136,6 +140,10 @@ func main() {
 		r.Post("/api/v1/partner/documents", partnerDocs.Initiate)
 		r.Post("/api/v1/partner/documents/{id}/upload-signed", partnerDocs.UploadSigned)
 		r.Get("/api/v1/partner/documents/{id}/download", partnerDocs.GetDownload)
+
+		r.Get("/api/v1/partner/promo-codes", partnerPromos.List)
+		r.Post("/api/v1/partner/promo-codes", partnerPromos.Create)
+		r.Delete("/api/v1/partner/promo-codes/{id}", partnerPromos.Deactivate)
 	})
 
 	// Admin auth (public)
@@ -170,6 +178,11 @@ func main() {
 		r.Post("/api/v1/admin/documents/{id}/reject", adminDocs.Reject)
 
 		r.Get("/api/v1/admin/fraud/signals", adminFraud.GetSignals)
+
+		r.Get("/api/v1/admin/events", adminEvents.List)
+		r.Post("/api/v1/admin/events", adminEvents.Upsert)
+		r.Patch("/api/v1/admin/events/{id}/special-rate", adminEvents.SetSpecialRate)
+		r.Patch("/api/v1/admin/events/{id}/active", adminEvents.SetActive)
 	})
 
 	srv := &http.Server{

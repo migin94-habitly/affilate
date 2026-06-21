@@ -41,6 +41,7 @@ type S3Config struct {
 type TrackingConfig struct {
 	CookieWindowDays int
 	BaseRedirectURL  string
+	TrackingBaseURL  string
 }
 
 type PayoutConfig struct {
@@ -73,6 +74,7 @@ func Load() *Config {
 		Tracking: TrackingConfig{
 			CookieWindowDays: getEnvInt("COOKIE_WINDOW_DAYS", 30),
 			BaseRedirectURL:  getEnv("BASE_REDIRECT_URL", "https://ticketon.kz"),
+			TrackingBaseURL:  getEnv("TRACKING_BASE_URL", "http://localhost:8080"),
 		},
 		Payout: PayoutConfig{
 			MinThreshold: getEnvFloat("PAYOUT_MIN_THRESHOLD", 5000),

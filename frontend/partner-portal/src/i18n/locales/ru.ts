@@ -3,6 +3,7 @@ export default {
     loading: 'Загрузка...',
     save: 'Сохранить',
     cancel: 'Отмена',
+    close: 'Закрыть',
     next: 'Далее',
     back: 'Назад',
     submit: 'Отправить',
@@ -16,6 +17,7 @@ export default {
     dashboard: 'Дашборд',
     events: 'События',
     links: 'Ссылки',
+    promoCodes: 'Промокоды',
     payouts: 'Выплаты',
     documents: 'Документы',
     profile: 'Профиль',
@@ -53,12 +55,14 @@ export default {
   },
   dashboard: {
     title: 'Дашборд',
+    welcome: 'Привет,',
     clicks: 'Клики',
     orders: 'Заказы',
     earned: 'Заработано',
     conversion: 'Конверсия',
     balance: 'Доступный баланс',
     pending: 'В обработке',
+    chartTitle: 'Клики и заказы (30 дней)',
     period: {
       day: 'Сегодня',
       week: 'Неделя',
@@ -77,6 +81,7 @@ export default {
   },
   links: {
     title: 'Генератор ссылок',
+    generate: 'Сгенерировать ссылку',
     generated: 'Ваша ссылка готова',
     trackingUrl: 'Ссылка для отслеживания',
     channel: 'Канал размещения',
@@ -87,6 +92,20 @@ export default {
       telegram: 'Telegram',
       web: 'Веб-сайт'
     }
+  },
+  promoCodes: {
+    title: 'Промокоды',
+    description: 'Промокод — альтернативный способ атрибуции для Stories и постов, где ссылка теряется при копировании',
+    create: 'Создать промокод',
+    code: 'Код',
+    codePlaceholder: 'Например: VASYA2026',
+    eventOptional: 'Событие (необязательно)',
+    noEvent: 'Все события',
+    uses: 'использований',
+    active: 'Активен',
+    inactive: 'Неактивен',
+    deactivate: 'Деактивировать',
+    noCodes: 'У вас пока нет промокодов'
   },
   payouts: {
     title: 'Выплаты',
@@ -132,6 +151,12 @@ export default {
     download: 'Скачать',
     downloadFinal: 'Скачать финальный документ',
     initiateTitle: 'Начать документооборот',
-    chooseStatus: 'Выберите ваш юридический статус для формирования пакета документов'
+    chooseStatus: 'Выберите ваш юридический статус для формирования пакета документов',
+    confirmStatus: 'Подтвердите статус:',
+    confirmDesc: 'Будет создан пакет документов для вашего статуса. Вы получите их для скачивания, подписания и загрузки обратно.',
+    createPackage: 'Создать пакет документов',
+    rejectionReason: 'Причина отказа:',
+    uploadHint: 'Загрузите ссылку на подписанный документ (Google Drive, Dropbox или другое облачное хранилище)',
+    uploadBtn: 'Загрузить'
   }
 }

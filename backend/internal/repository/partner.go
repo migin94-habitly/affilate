@@ -202,3 +202,22 @@ func (r *PartnerRepo) EnsureBalance(ctx context.Context, partnerID uuid.UUID) er
 		ON CONFLICT (partner_id) DO NOTHING`, partnerID)
 	return err
 }
+
+func (r *PartnerRepo) AddToPendingBalance(ctx context.Context, partnerID uuid.UUID, amount float64) error {
+	_, err := r.db.Exec(ctx, `
+		INSERT INTO partner_balances (partner_id, pending_amount)
+		VALUES ($1, $2)
+		ON CONFLICT (partner_id) DO UPDATE SET
+		  pending_amount = partner_balances.pending_amount + $2,
+		  updated_at = NOW()`, partnerID, amount)
+	return err
+}
+
+func (r *PartnerRepo) CountMonthlyOrders(ctx context.Context, partnerID uuid.UUID) (int, error) {
+	var count int
+	err := r.db.QueryRow(ctx, `
+		SELECT COUNT(*) FROM orders
+		WHERE partner_id=$1 AND status='completed'
+		  AND created_at >= date_trunc('month', NOW())`, partnerID).Scan(&count)
+	return count, err
+}

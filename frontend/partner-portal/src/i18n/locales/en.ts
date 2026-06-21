@@ -3,6 +3,7 @@ export default {
     loading: 'Loading...',
     save: 'Save',
     cancel: 'Cancel',
+    close: 'Close',
     next: 'Next',
     back: 'Back',
     submit: 'Submit',
@@ -16,6 +17,7 @@ export default {
     dashboard: 'Dashboard',
     events: 'Events',
     links: 'Links',
+    promoCodes: 'Promo Codes',
     payouts: 'Payouts',
     documents: 'Documents',
     profile: 'Profile',
@@ -53,12 +55,14 @@ export default {
   },
   dashboard: {
     title: 'Dashboard',
+    welcome: 'Hello,',
     clicks: 'Clicks',
     orders: 'Orders',
     earned: 'Earned',
     conversion: 'Conversion',
     balance: 'Available balance',
     pending: 'Pending',
+    chartTitle: 'Clicks & orders (30 days)',
     period: {
       day: 'Today',
       week: 'Week',
@@ -77,6 +81,7 @@ export default {
   },
   links: {
     title: 'Link Generator',
+    generate: 'Generate link',
     generated: 'Your link is ready',
     trackingUrl: 'Tracking link',
     channel: 'Placement channel',
@@ -87,6 +92,20 @@ export default {
       telegram: 'Telegram',
       web: 'Website'
     }
+  },
+  promoCodes: {
+    title: 'Promo Codes',
+    description: 'A promo code is an alternative attribution method for Stories and posts where tracking links may be lost when copied',
+    create: 'Create promo code',
+    code: 'Code',
+    codePlaceholder: 'e.g. VASYA2026',
+    eventOptional: 'Event (optional)',
+    noEvent: 'All events',
+    uses: 'uses',
+    active: 'Active',
+    inactive: 'Inactive',
+    deactivate: 'Deactivate',
+    noCodes: 'No promo codes yet'
   },
   payouts: {
     title: 'Payouts',
@@ -132,6 +151,12 @@ export default {
     download: 'Download',
     downloadFinal: 'Download final document',
     initiateTitle: 'Start document flow',
-    chooseStatus: 'Choose your legal status to generate the document package'
+    chooseStatus: 'Choose your legal status to generate the document package',
+    confirmStatus: 'Confirm status:',
+    confirmDesc: 'A document package will be created for your status. You will receive documents for download, signing, and re-upload.',
+    createPackage: 'Create document package',
+    rejectionReason: 'Rejection reason:',
+    uploadHint: 'Upload a link to the signed document (Google Drive, Dropbox, or other cloud storage)',
+    uploadBtn: 'Upload'
   }
 }

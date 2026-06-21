@@ -85,14 +85,14 @@ export function DocumentsPage() {
       {selectedStatus && (
         <div className="bg-white rounded-xl border border-brand-200 p-5 shadow-sm">
           <h3 className="font-semibold text-gray-900 mb-3">
-            Подтвердите статус: {t(`documents.legalStatuses.${selectedStatus}`)}
+            {t('documents.confirmStatus')} {t(`documents.legalStatuses.${selectedStatus}`)}
           </h3>
           <p className="text-sm text-gray-500 mb-4">
-            Будет создан пакет документов для вашего статуса. Вы получите их для скачивания, подписания и загрузки обратно.
+            {t('documents.confirmDesc')}
           </p>
           <div className="flex gap-2">
             <Button loading={initiateMutation.isPending} onClick={() => initiateMutation.mutate(selectedStatus)}>
-              Создать пакет документов
+              {t('documents.createPackage')}
             </Button>
             <Button variant="outline" onClick={() => setSelectedStatus(null)}>{t('common.cancel')}</Button>
           </div>
@@ -128,7 +128,7 @@ export function DocumentsPage() {
 
               {doc.rejection_reason && (
                 <div className="mt-2 p-2 bg-red-50 rounded-lg text-xs text-red-600">
-                  Причина отказа: {doc.rejection_reason}
+                  {t('documents.rejectionReason')} {doc.rejection_reason}
                 </div>
               )}
 
@@ -152,7 +152,7 @@ export function DocumentsPage() {
               {uploadDocId === doc.id && (
                 <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
                   <p className="text-xs text-gray-500">
-                    Загрузите ссылку на подписанный документ (Google Drive, Dropbox или другое облачное хранилище)
+                    {t('documents.uploadHint')}
                   </p>
                   <input
                     type="url"
@@ -168,10 +168,10 @@ export function DocumentsPage() {
                       disabled={!fileUrl}
                       onClick={() => uploadMutation.mutate({ id: doc.id, url: fileUrl })}
                     >
-                      Загрузить
+                      {t('documents.uploadBtn')}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setUploadDocId(null)}>
-                      Отмена
+                      {t('common.cancel')}
                     </Button>
                   </div>
                 </div>
