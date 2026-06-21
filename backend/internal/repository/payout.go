@@ -48,6 +48,20 @@ func (r *PayoutRepo) Create(ctx context.Context, p *domain.Payout) error {
 	return tx.Commit(ctx)
 }
 
+func (r *PayoutRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Payout, error) {
+	p := &domain.Payout{}
+	err := r.db.QueryRow(ctx, `
+		SELECT id, partner_id, amount, currency, freedom_pay_account, status,
+		       freedom_pay_ref, requested_at, processed_at, paid_at, notes
+		FROM payouts WHERE id=$1`, id).
+		Scan(&p.ID, &p.PartnerID, &p.Amount, &p.Currency, &p.FreedomPayAccount,
+			&p.Status, &p.FreedomPayRef, &p.RequestedAt, &p.ProcessedAt, &p.PaidAt, &p.Notes)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	return p, err
+}
+
 func (r *PayoutRepo) GetByPartner(ctx context.Context, partnerID uuid.UUID, page, perPage int) ([]*domain.Payout, int64, error) {
 	var total int64
 	r.db.QueryRow(ctx, "SELECT COUNT(*) FROM payouts WHERE partner_id=$1", partnerID).Scan(&total)

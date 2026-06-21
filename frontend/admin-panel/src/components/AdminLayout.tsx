@@ -8,7 +8,8 @@ const nav = [
   { to: '/commissions', label: 'Комиссии', icon: '📈' },
   { to: '/payouts', label: 'Выплаты', icon: '💳' },
   { to: '/documents', label: 'Документы', icon: '📄' },
-  { to: '/fraud', label: 'Антифрод', icon: '🛡️' }
+  { to: '/fraud', label: 'Антифрод', icon: '🛡️' },
+  { to: '/faq', label: 'FAQ & Контакты', icon: '❓' }
 ]
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

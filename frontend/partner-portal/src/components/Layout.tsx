@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
+import { getUnreadCount } from '@/api/partner'
 
 const navItems = [
   { to: '/dashboard', label: 'nav.dashboard', icon: '📊' },
@@ -9,6 +11,7 @@ const navItems = [
   { to: '/promo-codes', label: 'nav.promoCodes', icon: '🎫' },
   { to: '/payouts', label: 'nav.payouts', icon: '💳' },
   { to: '/documents', label: 'nav.documents', icon: '📄' },
+  { to: '/faq', label: 'nav.faq', icon: '❓' },
   { to: '/profile', label: 'nav.profile', icon: '👤' }
 ]
 
@@ -24,6 +27,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { partner, logout } = useAuthStore()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const { data: countData } = useQuery({
+    queryKey: ['notif-count'],
+    queryFn: getUnreadCount,
+    refetchInterval: 60_000
+  })
+  const unreadCount = countData?.unread ?? 0
 
   const handleLogout = () => {
     logout()
@@ -66,6 +76,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </span>
             )}
 
+            {/* Notification bell */}
+            <NavLink to="/notifications" className="relative p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </NavLink>
+
             {/* Language switcher */}
             <div className="flex gap-1">
               {languages.map(l => (
@@ -104,7 +127,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 }
               >
                 <span className="text-base">{item.icon}</span>
-                {t(item.label)}
+                <span className="flex-1">{t(item.label)}</span>
+                {item.to === '/notifications' && unreadCount > 0 && (
+                  <span className="w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -127,7 +155,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     }
                   >
                     <span className="text-base">{item.icon}</span>
-                    {t(item.label)}
+                    <span className="flex-1">{t(item.label)}</span>
+                    {item.to === '/notifications' && unreadCount > 0 && (
+                      <span className="w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
               </nav>
@@ -141,14 +174,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Mobile bottom nav — show the 5 most important items */}
+      {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-30">
-        {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[5]].map(item => (
+        {[navItems[0], navItems[1], navItems[3], navItems[5], navItems[6]].map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs transition-colors
+              `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs transition-colors relative
               ${isActive ? 'text-brand-500' : 'text-gray-400'}`
             }
           >

@@ -139,3 +139,35 @@ export interface Paginated<T> {
   per_page: number
   total_pages?: number
 }
+
+export interface Notification {
+  id: string
+  partner_id: string
+  type: string
+  title: string
+  body: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface FAQItem {
+  id: string
+  question: string
+  answer: string
+  category: string
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ContactInfo {
+  id: string
+  type: string
+  label: string
+  value: string
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}

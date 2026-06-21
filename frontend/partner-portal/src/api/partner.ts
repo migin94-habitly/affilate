@@ -2,7 +2,8 @@ import api from './client'
 import type {
   AuthResult, Partner, PartnerKYC, PartnerBalance,
   Event, GeneratedLink, PartnerStats, ClickDataPoint,
-  Payout, LegalDocument, LegalStatus, Paginated, PromoCode
+  Payout, LegalDocument, LegalStatus, Paginated, PromoCode,
+  Notification, FAQItem, ContactInfo
 } from '@/types'
 
 // Auth
@@ -85,3 +86,23 @@ export const deactivatePromoCode = (id: string) =>
 // Auth refresh
 export const refreshToken = (refresh_token: string) =>
   api.post<AuthResult>('/partner/auth/refresh', { refresh_token }).then(r => r.data)
+
+// Notifications
+export const getNotifications = (page = 1) =>
+  api.get<Paginated<Notification>>('/partner/notifications', { params: { page } }).then(r => r.data)
+
+export const getUnreadCount = () =>
+  api.get<{ unread: number }>('/partner/notifications/unread-count').then(r => r.data)
+
+export const markNotificationRead = (id: string) =>
+  api.patch(`/partner/notifications/${id}/read`).then(r => r.data)
+
+export const markAllNotificationsRead = () =>
+  api.post('/partner/notifications/read-all').then(r => r.data)
+
+// FAQ & Contacts
+export const getFAQ = () =>
+  api.get<FAQItem[]>('/partner/faq').then(r => r.data)
+
+export const getContacts = () =>
+  api.get<ContactInfo[]>('/partner/contacts').then(r => r.data)

@@ -20,6 +20,8 @@ export default {
     promoCodes: 'Promo Codes',
     payouts: 'Payouts',
     documents: 'Documents',
+    faq: 'FAQ',
+    notifications: 'Notifications',
     profile: 'Profile',
     logout: 'Log out'
   },
@@ -51,7 +53,18 @@ export default {
     freedomPayHint: 'All payouts are made via Freedom Pay in KZT',
     offerTitle: 'Partner Offer Agreement',
     offerText: 'I agree to the terms of the Ticketon Affiliate Platform partnership agreement, including #sponsored content requirements, no-fraud and no-self-referral rules.',
-    accept: 'Accept offer'
+    accept: 'Accept offer',
+    checklistTitle: 'Getting started',
+    checklistDone: 'done',
+    steps: {
+      account: 'Account created',
+      kyc: 'KYC details filled (IIN + Freedom Pay)',
+      kycLink: 'Fill in',
+      offer: 'Offer accepted',
+      offerLink: 'Accept',
+      documents: 'Document flow initiated',
+      documentsLink: 'Start',
+    }
   },
   dashboard: {
     title: 'Dashboard',
@@ -158,5 +171,23 @@ export default {
     rejectionReason: 'Rejection reason:',
     uploadHint: 'Upload a link to the signed document (Google Drive, Dropbox, or other cloud storage)',
     uploadBtn: 'Upload'
+  },
+  notifications: {
+    title: 'Notifications',
+    markAllRead: 'Mark all as read',
+    empty: 'No notifications yet'
+  },
+  faq: {
+    title: 'FAQ',
+    subtitle: 'Answers to common questions about working with TAP',
+    contacts: 'Contact us',
+    noContacts: 'No contacts listed',
+    categories: {
+      general: 'General',
+      payments: 'Payments',
+      commissions: 'Commissions',
+      tracking: 'Tracking',
+      documents: 'Documents'
+    }
   }
 }

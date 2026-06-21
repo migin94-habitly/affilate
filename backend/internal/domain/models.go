@@ -323,6 +323,42 @@ type PromoCode struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
+// --- Notifications ---
+
+type Notification struct {
+	ID        uuid.UUID      `json:"id"`
+	PartnerID uuid.UUID      `json:"partner_id"`
+	Type      string         `json:"type"`
+	Title     string         `json:"title"`
+	Body      string         `json:"body"`
+	IsRead    bool           `json:"is_read"`
+	CreatedAt time.Time      `json:"created_at"`
+}
+
+// --- FAQ ---
+
+type FAQItem struct {
+	ID        uuid.UUID `json:"id"`
+	Question  string    `json:"question"`
+	Answer    string    `json:"answer"`
+	Category  string    `json:"category"`
+	SortOrder int       `json:"sort_order"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type ContactInfo struct {
+	ID        uuid.UUID `json:"id"`
+	Type      string    `json:"type"`
+	Label     string    `json:"label"`
+	Value     string    `json:"value"`
+	SortOrder int       `json:"sort_order"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 // --- Pagination ---
 
 type PaginatedResult[T any] struct {

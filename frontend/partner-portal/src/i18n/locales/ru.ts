@@ -20,6 +20,8 @@ export default {
     promoCodes: 'Промокоды',
     payouts: 'Выплаты',
     documents: 'Документы',
+    faq: 'FAQ',
+    notifications: 'Уведомления',
     profile: 'Профиль',
     logout: 'Выйти'
   },
@@ -51,7 +53,18 @@ export default {
     freedomPayHint: 'Все выплаты производятся через Freedom Pay в тенге (KZT)',
     offerTitle: 'Партнёрская оферта',
     offerText: 'Я соглашаюсь с условиями партнёрского соглашения Ticketon Affiliate Platform, включая требования к размещению #партнёрский материал, запрет на накрутку и self-referral.',
-    accept: 'Принять оферту'
+    accept: 'Принять оферту',
+    checklistTitle: 'Начало работы',
+    checklistDone: 'выполнено',
+    steps: {
+      account: 'Аккаунт создан',
+      kyc: 'Данные KYC заполнены (ИИН + Freedom Pay)',
+      kycLink: 'Заполнить',
+      offer: 'Оферта принята',
+      offerLink: 'Принять',
+      documents: 'Документооборот инициирован',
+      documentsLink: 'Начать',
+    }
   },
   dashboard: {
     title: 'Дашборд',
@@ -158,5 +171,23 @@ export default {
     rejectionReason: 'Причина отказа:',
     uploadHint: 'Загрузите ссылку на подписанный документ (Google Drive, Dropbox или другое облачное хранилище)',
     uploadBtn: 'Загрузить'
+  },
+  notifications: {
+    title: 'Уведомления',
+    markAllRead: 'Прочитать все',
+    empty: 'У вас пока нет уведомлений'
+  },
+  faq: {
+    title: 'Часто задаваемые вопросы',
+    subtitle: 'Ответы на популярные вопросы о работе с TAP',
+    contacts: 'Связаться с нами',
+    noContacts: 'Контакты не указаны',
+    categories: {
+      general: 'Общие',
+      payments: 'Выплаты',
+      commissions: 'Комиссии',
+      tracking: 'Отслеживание',
+      documents: 'Документы'
+    }
   }
 }

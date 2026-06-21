@@ -53,6 +53,8 @@ func main() {
 	docRepo := repository.NewDocumentRepo(pool)
 	adminRepo := repository.NewAdminRepo(pool)
 	promoRepo := repository.NewPromoRepo(pool)
+	notifRepo := repository.NewNotificationRepo(pool)
+	faqRepo := repository.NewFAQRepo(pool)
 
 	// Services
 	authSvc := service.NewAuthService(partnerRepo, adminRepo, &cfg.JWT)
@@ -69,17 +71,20 @@ func main() {
 	partnerPayouts := partner.NewPayoutsHandler(payoutSvc)
 	partnerDocs := partner.NewDocumentsHandler(docSvc)
 	partnerPromos := partner.NewPromosHandler(promoRepo)
+	partnerNotifs := partner.NewNotificationsHandler(notifRepo)
+	partnerFAQ := partner.NewFAQHandler(faqRepo)
 
 	trackHandler := tracking.NewTrackHandler(trackingSvc)
 
 	adminAuth := adminhandler.NewAuthHandler(authSvc, adminRepo)
-	adminPartners := adminhandler.NewPartnersHandler(partnerRepo, adminRepo)
+	adminPartners := adminhandler.NewPartnersHandler(partnerRepo, adminRepo, notifRepo)
 	adminComm := adminhandler.NewCommissionsHandler(commSvc, commRepo, adminRepo)
-	adminPayouts := adminhandler.NewAdminPayoutsHandler(payoutSvc)
+	adminPayouts := adminhandler.NewAdminPayoutsHandler(payoutSvc, payoutRepo, notifRepo)
 	adminAnalytics := adminhandler.NewAnalyticsHandler(adminRepo)
-	adminDocs := adminhandler.NewAdminDocumentsHandler(docSvc, adminRepo)
+	adminDocs := adminhandler.NewAdminDocumentsHandler(docSvc, adminRepo, notifRepo)
 	adminFraud := adminhandler.NewFraudHandler(trackingRepo)
 	adminEvents := adminhandler.NewAdminEventsHandler(eventRepo, adminRepo)
+	adminFAQ := adminhandler.NewAdminFAQHandler(faqRepo)
 
 	// Router
 	r := chi.NewRouter()
@@ -144,6 +149,16 @@ func main() {
 		r.Get("/api/v1/partner/promo-codes", partnerPromos.List)
 		r.Post("/api/v1/partner/promo-codes", partnerPromos.Create)
 		r.Delete("/api/v1/partner/promo-codes/{id}", partnerPromos.Deactivate)
+
+		// Notifications
+		r.Get("/api/v1/partner/notifications", partnerNotifs.List)
+		r.Get("/api/v1/partner/notifications/unread-count", partnerNotifs.UnreadCount)
+		r.Post("/api/v1/partner/notifications/read-all", partnerNotifs.MarkAllRead)
+		r.Patch("/api/v1/partner/notifications/{id}/read", partnerNotifs.MarkRead)
+
+		// FAQ & Contacts (partner reads)
+		r.Get("/api/v1/partner/faq", partnerFAQ.GetFAQ)
+		r.Get("/api/v1/partner/contacts", partnerFAQ.GetContacts)
 	})
 
 	// Admin auth (public)
@@ -185,6 +200,17 @@ func main() {
 		r.Post("/api/v1/admin/events", adminEvents.Upsert)
 		r.Patch("/api/v1/admin/events/{id}/special-rate", adminEvents.SetSpecialRate)
 		r.Patch("/api/v1/admin/events/{id}/active", adminEvents.SetActive)
+
+		// FAQ & Contacts management
+		r.Get("/api/v1/admin/faq", adminFAQ.ListFAQ)
+		r.Post("/api/v1/admin/faq", adminFAQ.CreateFAQ)
+		r.Put("/api/v1/admin/faq/{id}", adminFAQ.UpdateFAQ)
+		r.Delete("/api/v1/admin/faq/{id}", adminFAQ.DeleteFAQ)
+
+		r.Get("/api/v1/admin/contacts", adminFAQ.ListContacts)
+		r.Post("/api/v1/admin/contacts", adminFAQ.CreateContact)
+		r.Put("/api/v1/admin/contacts/{id}", adminFAQ.UpdateContact)
+		r.Delete("/api/v1/admin/contacts/{id}", adminFAQ.DeleteContact)
 	})
 
 	srv := &http.Server{

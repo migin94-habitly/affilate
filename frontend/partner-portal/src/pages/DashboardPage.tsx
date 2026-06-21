@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { getStats, getTimeSeries } from '@/api/partner'
+import { Link } from 'react-router-dom'
+import { getStats, getTimeSeries, getProfile, getDocuments } from '@/api/partner'
 import { StatCard } from '@/components/ui/Card'
 import { useAuthStore } from '@/store/auth'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -12,6 +13,67 @@ const tierColors: Record<string, string> = {
   bronze: 'from-orange-400 to-orange-500',
   silver: 'from-gray-400 to-gray-500',
   gold: 'from-yellow-400 to-yellow-500'
+}
+
+interface OnboardingStep {
+  id: string
+  labelKey: string
+  done: boolean
+  linkTo?: string
+  linkLabelKey?: string
+}
+
+function OnboardingWidget({ steps }: { steps: OnboardingStep[] }) {
+  const { t } = useTranslation()
+  const completed = steps.filter(s => s.done).length
+  const total = steps.length
+  const allDone = completed === total
+
+  if (allDone) return null
+
+  const pct = Math.round((completed / total) * 100)
+
+  return (
+    <div className="bg-white rounded-2xl border border-brand-100 shadow-sm p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-gray-900">{t('onboarding.checklistTitle')}</h2>
+        <span className="text-xs text-gray-500">{completed}/{total} {t('onboarding.checklistDone')}</span>
+      </div>
+      <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+        <div
+          className="bg-brand-500 h-1.5 rounded-full transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="space-y-2">
+        {steps.map(step => (
+          <div key={step.id} className="flex items-center gap-3">
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0
+              ${step.done ? 'bg-green-500' : 'bg-gray-200'}`}>
+              {step.done ? (
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <div className="w-2 h-2 rounded-full bg-gray-400" />
+              )}
+            </div>
+            <span className={`text-sm flex-1 ${step.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+              {t(step.labelKey)}
+            </span>
+            {!step.done && step.linkTo && (
+              <Link
+                to={step.linkTo}
+                className="text-xs text-brand-500 hover:text-brand-600 font-medium whitespace-nowrap"
+              >
+                {t(step.linkLabelKey || 'common.next')} →
+              </Link>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function DashboardPage() {
@@ -29,7 +91,46 @@ export function DashboardPage() {
     queryFn: () => getTimeSeries(30)
   })
 
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfile
+  })
+
+  const { data: documents } = useQuery({
+    queryKey: ['documents'],
+    queryFn: getDocuments
+  })
+
   const fmt = (n: number) => n?.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) ?? '—'
+
+  const onboardingSteps: OnboardingStep[] = [
+    {
+      id: 'account',
+      labelKey: 'onboarding.steps.account',
+      done: true,
+    },
+    {
+      id: 'kyc',
+      labelKey: 'onboarding.steps.kyc',
+      done: !!profile?.kyc,
+      linkTo: '/profile',
+      linkLabelKey: 'onboarding.steps.kycLink',
+    },
+    {
+      id: 'offer',
+      labelKey: 'onboarding.steps.offer',
+      done: !!profile?.offer_accepted,
+      linkTo: '/profile',
+      linkLabelKey: 'onboarding.steps.offerLink',
+    },
+    {
+      id: 'documents',
+      labelKey: 'onboarding.steps.documents',
+      done: !!(documents && documents.length > 0),
+      linkTo: '/documents',
+      linkLabelKey: 'onboarding.steps.documentsLink',
+    },
+  ]
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
@@ -47,6 +148,9 @@ export function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Onboarding checklist */}
+      <OnboardingWidget steps={onboardingSteps} />
 
       {/* Period selector */}
       <div className="flex gap-2">
