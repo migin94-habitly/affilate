@@ -12,21 +12,26 @@ import (
 	"github.com/ticketon/tap/internal/repository"
 )
 
+type CommissionSvcIface interface {
+	Calculate(ctx context.Context, order *domain.Order) error
+	CheckAndUpgradeTier(ctx context.Context, partnerID uuid.UUID) error
+}
+
 type TrackingService struct {
-	trackingRepo *repository.TrackingRepo
-	partnerRepo  *repository.PartnerRepo
-	eventRepo    *repository.EventRepo
-	promoRepo    *repository.PromoRepo
-	commSvc      *CommissionService
+	trackingRepo repository.TrackingRepoIface
+	partnerRepo  repository.PartnerRepoIface
+	eventRepo    repository.EventRepoIface
+	promoRepo    repository.PromoRepoIface
+	commSvc      CommissionSvcIface
 	cfg          *config.TrackingConfig
 }
 
 func NewTrackingService(
-	tr *repository.TrackingRepo,
-	pr *repository.PartnerRepo,
-	er *repository.EventRepo,
-	pr2 *repository.PromoRepo,
-	cs *CommissionService,
+	tr repository.TrackingRepoIface,
+	pr repository.PartnerRepoIface,
+	er repository.EventRepoIface,
+	pr2 repository.PromoRepoIface,
+	cs CommissionSvcIface,
 	cfg *config.TrackingConfig,
 ) *TrackingService {
 	return &TrackingService{
