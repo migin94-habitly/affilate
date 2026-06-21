@@ -14,12 +14,12 @@ import (
 )
 
 type AuthService struct {
-	partnerRepo *repository.PartnerRepo
-	adminRepo   *repository.AdminRepo
+	partnerRepo repository.PartnerRepoIface
+	adminRepo   repository.AdminRepoIface
 	cfg         *config.JWTConfig
 }
 
-func NewAuthService(pr *repository.PartnerRepo, ar *repository.AdminRepo, cfg *config.JWTConfig) *AuthService {
+func NewAuthService(pr repository.PartnerRepoIface, ar repository.AdminRepoIface, cfg *config.JWTConfig) *AuthService {
 	return &AuthService{partnerRepo: pr, adminRepo: ar, cfg: cfg}
 }
 

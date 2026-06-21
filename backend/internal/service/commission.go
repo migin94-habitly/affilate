@@ -18,11 +18,11 @@ const DefaultSFPct = 10.0
 const RateDecreaseNoticeDays = 14
 
 type CommissionService struct {
-	commRepo    *repository.CommissionRepo
-	partnerRepo *repository.PartnerRepo
+	commRepo    repository.CommissionRepoIface
+	partnerRepo repository.PartnerRepoIface
 }
 
-func NewCommissionService(cr *repository.CommissionRepo, pr *repository.PartnerRepo) *CommissionService {
+func NewCommissionService(cr repository.CommissionRepoIface, pr repository.PartnerRepoIface) *CommissionService {
 	return &CommissionService{commRepo: cr, partnerRepo: pr}
 }
 

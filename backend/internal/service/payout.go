@@ -10,13 +10,13 @@ import (
 )
 
 type PayoutService struct {
-	payoutRepo  *repository.PayoutRepo
-	partnerRepo *repository.PartnerRepo
-	commRepo    *repository.CommissionRepo
+	payoutRepo  repository.PayoutRepoIface
+	partnerRepo repository.PartnerRepoIface
+	commRepo    repository.CommissionRepoIface
 	cfg         *config.PayoutConfig
 }
 
-func NewPayoutService(pr *repository.PayoutRepo, partner *repository.PartnerRepo, cr *repository.CommissionRepo, cfg *config.PayoutConfig) *PayoutService {
+func NewPayoutService(pr repository.PayoutRepoIface, partner repository.PartnerRepoIface, cr repository.CommissionRepoIface, cfg *config.PayoutConfig) *PayoutService {
 	return &PayoutService{payoutRepo: pr, partnerRepo: partner, commRepo: cr, cfg: cfg}
 }
 
