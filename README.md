@@ -66,7 +66,7 @@ cd affilate
 
 # 2. Создать файл окружения
 cp .env.example .env
-# Обязательно поменяйте JWT_SECRET на случайную строку!
+# Обязательно измените JWT_SECRET и WEBHOOK_SECRET!
 
 # 3. Запустить все сервисы
 docker compose up -d
@@ -135,32 +135,49 @@ affilate/
 
 Комиссия рассчитывается от **сервисного сбора** (не от суммы заказа):
 
-| Tier | Ставка | Апгрейд |
-|------|--------|---------|
-| Bronze | 15% | — |
-| Silver | 20% | после N заказов (настраивается в Admin Panel) |
-| Gold | 25% | вручную через Admin Panel |
+| Tier | Ставка | CPA-бонус за нового покупателя |
+|------|--------|-------------------------------|
+| Bronze | 15% | настраивается |
+| Silver | 20% | настраивается |
+| Gold | 25% | настраивается |
 
-Администратор может менять ставки, CPA-бонус и порог апгрейда в разделе **Комиссии → Тарифы**.
+- Апгрейд тира — **вручную** через Admin Panel → Partners → выпадающий список Tier.
+- Поле `min_orders_for_silver` в тарифе Bronze хранит пороговое значение для будущей автоматизации (логика апгрейда — заглушка, реализуется в Phase 2).
+- **Event-specific ставка**: в таблице `event_commission_rates` можно задать специальную ставку для конкретного события; она перекрывает тирную.
 
-### Атрибуция
+### Атрибуция кликов
 
 - **Cookie-window:** 30 дней (настраивается через `COOKIE_WINDOW_DAYS`)
-- **Fallback для in-app browsers** (Instagram, TikTok): `?tap_click=<id>` в URL сохраняется как параметр на случай, если cookie не работает
-- **Модель:** last-click — засчитывается последний клик перед заказом в пределах окна
+- **Cookie:** `tap_click=<click_id>`, `HttpOnly`, `SameSite=Lax`; флаг `Secure` включается только при `ENVIRONMENT=production`
+- **Fallback для in-app browsers** (Instagram, TikTok): параметр `?tap_click=<click_id>` добавляется к URL назначения — Ticketon Core обязан передать его обратно в webhook-поле `click_id`
+- **Модель:** last-click — засчитывается последний активный клик перед заказом в пределах окна
 
 ### Жизненный цикл комиссии
 
 ```
-Клик → Заказ (webhook) → Commission [pending]
-    → Одобрение admin → Commission [approved]
-    → Flush to balance → PartnerBalance.available_amount
-    → Запрос выплаты  → Payout [pending]
-    → Обработка       → Payout [paid_out]
-```
+Клик (GET /track/<id>)
+  → cookie + redirect на ticketon.kz?tap_click=<id>
+  → Заказ (POST /webhook/order)
+      ├── идемпотентность: если order_id уже известен — пропуск
+      ├── Attribution: click_id из body → GetActiveClickForPartner
+      └── commission.Calculate()
+            ├── rate  = тарифная ставка тира (или event-специфичная)
+            ├── base  = service_fee из webhook
+            ├── bonus = tariff.cpa_bonus, если is_new_buyer == true
+            └── Commission [status=pending] → сохранение в БД
 
-Минимальная сумма для запроса выплаты: **5 000 ₸** (настраивается через `PAYOUT_MIN_THRESHOLD`).  
-Выплаты только через **Freedom Pay** в тенге (KZT).
+Admin Panel → «Одобрить все»
+  → Commission [pending → approved]
+  → FlushToBalance: зачисляет сумму в partner_balances.available_amount
+
+Партнёр → «Запросить выплату» (≥ 5 000 ₸)
+  → FlushToBalance (на случай непроведённых flush)
+  → проверка available_amount
+  → Payout [status=pending], available → pending
+
+Admin Panel → «В обработку» / «Выплачено» / «Ошибка»
+  → Payout [processing → paid_out] или [processing → failed → available возвращается]
+```
 
 ### Документооборот
 
@@ -173,18 +190,23 @@ affilate/
 | Физическое лицо | Договор присоединения + Согласие на обработку ПД + Документ, удостоверяющий личность |
 
 **Статусная машина:**
-`draft` → `awaiting_partner_signature` → `under_ticketon_review` → `signed` / `rejected`
+```
+draft
+  → awaiting_partner_signature   (после InitiateDocuments)
+  → under_ticketon_review        (партнёр загрузил подписанный файл)
+  → signed / rejected            (решение Admin Panel)
+```
 
 ### Антифрод
 
-Автоматическое обнаружение двух паттернов:
+Автоматическое обнаружение двух паттернов (SQL-запросы без ML):
 
 | Сигнал | Условие |
-|--------|--------|
-| Всплеск кликов | > 100 кликов/час от одного партнёра |
-| Нулевая конверсия | > 50 кликов за 7 дней без единого заказа |
+|--------|---------|
+| `click_spike` | > 100 кликов/час от одного партнёра |
+| `zero_conversion` | > 50 кликов за 7 дней без единого заказа |
 
-Сигналы отображаются в Admin Panel → **Антифрод** (обновление раз в 60 секунд).
+Поле `fraud_hold = true` на комиссии блокирует её выплату. Сигналы отображаются в Admin Panel → **Антифрод** (обновление раз в 60 секунд).
 
 ---
 
@@ -196,9 +218,9 @@ Base URL: `http://localhost:8080`
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| `GET` | `/health` | Проверка работоспособности |
-| `GET` | `/track/{click_id}` | Трекинговый редирект (устанавливает cookie) |
-| `POST` | `/api/v1/webhook/order` | Webhook от Ticketon о новом заказе |
+| `GET` | `/health` | Проверка работоспособности → `{"status":"ok"}` |
+| `GET` | `/track/{click_id}` | Трекинговый редирект: ставит cookie `tap_click`, добавляет `?tap_click` к URL и делает 302 |
+| `POST` | `/api/v1/webhook/order` | Webhook от Ticketon Core о новом заказе |
 
 ### Партнёрский API `/api/v1/partner/...`
 
@@ -208,19 +230,22 @@ Base URL: `http://localhost:8080`
 |-------|------|----------|
 | `POST` | `/auth/register` | Регистрация |
 | `POST` | `/auth/login` | Вход |
-| `GET/PUT` | `/profile` | Профиль |
-| `POST` | `/kyc` | KYC (IIN + Freedom Pay account) |
+| `GET` | `/profile` | Профиль + текущий тир |
+| `PUT` | `/profile` | Обновить профиль (язык, страна и т.д.) |
+| `POST` | `/kyc` | Сохранить KYC: IIN + Freedom Pay account |
 | `POST` | `/offer/accept` | Принять оферту |
-| `GET` | `/events` | Каталог событий (фильтры: город, категория, поиск) |
-| `POST` | `/links/generate` | Сгенерировать трекинговую ссылку + QR |
-| `GET` | `/stats` | Клики, заказы, конверсия |
-| `GET` | `/stats/series` | Временной ряд кликов |
-| `GET` | `/payouts/balance` | Текущий баланс |
-| `POST` | `/payouts/request` | Запросить выплату |
+| `GET` | `/events` | Каталог событий (query: `city`, `category`, `search`, `page`, `per_page`) |
+| `GET` | `/events/filters` | Доступные города и категории |
+| `GET` | `/events/{id}` | Карточка события |
+| `POST` | `/links/generate` | Сгенерировать ссылку + QR-код (через api.qrserver.com) |
+| `GET` | `/stats` | Клики, заказы, конверсия за период |
+| `GET` | `/stats/series` | Временной ряд кликов (для графика) |
+| `GET` | `/payouts/balance` | Текущий баланс (available / pending / paid_out) |
+| `POST` | `/payouts/request` | Запросить выплату (мин. 5 000 ₸) |
 | `GET` | `/payouts` | История выплат |
-| `POST` | `/documents` | Инициировать документооборот |
+| `POST` | `/documents` | Инициировать документооборот (body: `legal_status`) |
 | `GET` | `/documents` | Список документов |
-| `POST` | `/documents/{id}/upload-signed` | Загрузить подписанный документ |
+| `POST` | `/documents/{id}/upload-signed` | Загрузить URL подписанного документа |
 | `GET` | `/documents/{id}/download` | Скачать финальный документ |
 
 ### Admin API `/api/v1/admin/...`
@@ -230,35 +255,47 @@ Base URL: `http://localhost:8080`
 | Метод | Путь | Описание |
 |-------|------|----------|
 | `POST` | `/auth/login` | Вход администратора |
-| `GET` | `/analytics` | Метрики канала (GMV%, CAC, активные партнёры) |
-| `GET` | `/partners` | Список партнёров с фильтрами |
-| `PATCH` | `/partners/{id}/status` | active / suspended / banned |
-| `PATCH` | `/partners/{id}/tier` | bronze / silver / gold |
-| `GET/PUT` | `/tariffs` | Тарифы по тирам |
-| `GET` | `/commissions` | Список комиссий |
-| `POST` | `/commissions/approve-all` | Одобрить все pending-комиссии |
-| `GET` | `/payouts` | Список выплат |
-| `PATCH` | `/payouts/{id}/status` | Обновить статус выплаты |
+| `GET` | `/me` | Профиль текущего администратора |
+| `GET` | `/analytics` | Метрики: GMV%, CAC, активные партнёры (query: `period=7d\|30d\|90d`) |
+| `GET` | `/partners` | Список партнёров (`status`, `segment`, `search`, `page`) |
+| `GET` | `/partners/{id}` | Карточка партнёра |
+| `PATCH` | `/partners/{id}/status` | `active` / `suspended` / `banned` |
+| `PATCH` | `/partners/{id}/tier` | `bronze` / `silver` / `gold` |
+| `GET` | `/tariffs` | Тарифы всех трёх тиров |
+| `PUT` | `/tariffs` | Обновить тариф (`base_rate`, `cpa_bonus`, `min_orders_for_silver`) |
+| `GET` | `/commissions` | Список комиссий (`status`, `page`, `per_page`) |
+| `POST` | `/commissions/approve-all` | Одобрить все `pending`-комиссии → flush to balance |
+| `GET` | `/payouts` | Список выплат (`status`, `page`, `per_page`) |
+| `PATCH` | `/payouts/{id}/status` | `processing` / `paid_out` / `failed` |
 | `GET` | `/payouts/export` | CSV-экспорт для Freedom Pay |
-| `GET` | `/documents` | Список документов |
-| `POST` | `/documents/{id}/sign` | Подписать со стороны Ticketon |
-| `POST` | `/documents/{id}/reject` | Отклонить с указанием причины |
+| `GET` | `/documents` | Список документов (`status`, `page`, `per_page`) |
+| `GET` | `/documents/{id}` | Карточка документа |
+| `GET` | `/documents/{id}/download-url` | URL файла, загруженного партнёром |
+| `POST` | `/documents/{id}/sign` | Подписать: `ticketon_file_url` + `final_file_url` |
+| `POST` | `/documents/{id}/reject` | Отклонить с указанием `reason` |
 | `GET` | `/fraud/signals` | Список фрод-сигналов |
 
-### Формат webhook-запроса от Ticketon
+### Формат webhook-запроса от Ticketon Core
 
 ```json
 POST /api/v1/webhook/order
 Content-Type: application/json
 
 {
-  "external_order_id": "ticketon-order-123",
-  "click_id": "optional-if-cookie-present",
-  "service_fee": 1500.00,
-  "status": "paid",
-  "event_id": "uuid-of-event"
+  "order_id":    "ticketon-order-123",
+  "secret":      "<WEBHOOK_SECRET>",
+  "event_id":    "external-event-id",
+  "buyer_email": "user@example.com",
+  "is_new_buyer": false,
+  "total_amount": 15000.00,
+  "service_fee":  1500.00,
+  "currency":    "KZT",
+  "status":      "paid",
+  "click_id":    "optional-click-id"
 }
 ```
+
+> **Важно:** поле `is_new_buyer: true` активирует CPA-бонус по тарифу. Поле `click_id` необходимо для атрибуции в in-app browsers, где cookie не сохраняется.
 
 ---
 
@@ -268,17 +305,23 @@ Content-Type: application/json
 
 | Переменная | По умолчанию | Описание |
 |-----------|-------------|----------|
-| `SERVER_PORT` | `8080` | Порт бэкенда |
+| `PORT` | `8080` | Порт HTTP-сервера |
+| `ENVIRONMENT` | `development` | `production` включает `Secure` на cookie |
 | `DATABASE_URL` | — | DSN PostgreSQL |
-| `JWT_SECRET` | — | **Обязательно сменить в продакшене** |
-| `JWT_EXPIRY_HOURS` | `72` | Срок жизни токена |
+| `JWT_SECRET` | — | **Обязательно сменить** |
+| `JWT_EXPIRY_HOURS` | `24` | Срок жизни access-токена |
+| `JWT_REFRESH_EXPIRY_HOURS` | `168` | Срок жизни refresh-токена (7 дней) |
 | `S3_ENDPOINT` | — | URL MinIO / S3 |
 | `S3_BUCKET` | `tap-documents` | Имя bucket |
+| `S3_REGION` | `us-east-1` | Регион |
 | `S3_ACCESS_KEY` | — | Access key |
 | `S3_SECRET_KEY` | — | Secret key |
-| `TRACKING_BASE_URL` | — | Публичный URL для трекинговых ссылок |
+| `BASE_REDIRECT_URL` | `https://ticketon.kz` | Запасной URL при неизвестном clickID |
 | `COOKIE_WINDOW_DAYS` | `30` | Окно атрибуции в днях |
+| `WEBHOOK_SECRET` | `dev-webhook-secret` | **Обязательно сменить** — аутентификация webhook |
 | `PAYOUT_MIN_THRESHOLD` | `5000` | Минимальная выплата в KZT |
+| `PAYOUT_CURRENCY` | `KZT` | Валюта выплат |
+| `FRONTEND_URL` | `http://localhost:5173` | Разрешённый Origin для CORS |
 
 ---
 
@@ -292,13 +335,15 @@ cd backend
 # Запустить только инфраструктуру
 docker compose up postgres minio minio-init -d
 
-# Переменные для локального запуска
+# Минимальный набор переменных для локального запуска
+export PORT=8080
 export DATABASE_URL="postgres://tap_user:tap_secret@localhost:5432/tap_db?sslmode=disable"
 export JWT_SECRET="dev-secret-32-chars-minimum-here!!"
 export S3_ENDPOINT="http://localhost:9000"
 export S3_ACCESS_KEY="minioadmin"
 export S3_SECRET_KEY="minioadmin123"
 export S3_BUCKET="tap-documents"
+export WEBHOOK_SECRET="dev-webhook-secret"
 
 go run ./cmd/server
 ```
@@ -340,3 +385,15 @@ Partner Portal поддерживает 7 языков. Переключател
 | `tr` | Türkçe |
 
 Файлы переводов: `frontend/partner-portal/src/i18n/locales/`
+
+---
+
+## Известные ограничения (Phase 2)
+
+| Компонент | Текущее состояние |
+|-----------|------------------|
+| Авто-апгрейд тира Bronze → Silver | Заглушка; логика в `CommissionService.CheckAndUpgradeTier` не реализована |
+| QR-коды | Генерируются через внешний сервис `api.qrserver.com` |
+| Антифрод | Только два SQL-паттерна; ML-модели нет |
+| Webhook-аутентификация | Shared secret в теле запроса; HMAC-подпись — Phase 2 |
+| S3-загрузка файлов | Хранятся URL документов; прямой upload через presigned URLs не реализован |
