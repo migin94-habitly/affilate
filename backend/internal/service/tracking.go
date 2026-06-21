@@ -16,6 +16,7 @@ type TrackingService struct {
 	trackingRepo *repository.TrackingRepo
 	partnerRepo  *repository.PartnerRepo
 	eventRepo    *repository.EventRepo
+	promoRepo    *repository.PromoRepo
 	commSvc      *CommissionService
 	cfg          *config.TrackingConfig
 }
@@ -24,6 +25,7 @@ func NewTrackingService(
 	tr *repository.TrackingRepo,
 	pr *repository.PartnerRepo,
 	er *repository.EventRepo,
+	pr2 *repository.PromoRepo,
 	cs *CommissionService,
 	cfg *config.TrackingConfig,
 ) *TrackingService {
@@ -31,6 +33,7 @@ func NewTrackingService(
 		trackingRepo: tr,
 		partnerRepo:  pr,
 		eventRepo:    er,
+		promoRepo:    pr2,
 		commSvc:      cs,
 		cfg:          cfg,
 	}
@@ -84,7 +87,7 @@ func (s *TrackingService) GenerateLink(ctx context.Context, input GenerateLinkIn
 		return nil, err
 	}
 
-	trackingURL := fmt.Sprintf("/track/%s", clickID)
+	trackingURL := fmt.Sprintf("%s/track/%s", s.cfg.TrackingBaseURL, clickID)
 
 	return &GeneratedLink{
 		ClickID:     clickID,
@@ -123,6 +126,7 @@ func (s *TrackingService) RecordClick(ctx context.Context, clickID, ip, userAgen
 type OrderWebhookInput struct {
 	ExternalOrderID string  `json:"order_id"`
 	ClickID         *string `json:"click_id,omitempty"`
+	PromoCode       *string `json:"promo_code,omitempty"`
 	EventExternalID string  `json:"event_id"`
 	BuyerEmail      string  `json:"buyer_email"`
 	IsNewBuyer      bool    `json:"is_new_buyer"`
@@ -147,12 +151,22 @@ func (s *TrackingService) ProcessOrderWebhook(ctx context.Context, input OrderWe
 	var partnerID *uuid.UUID
 	var eventID *uuid.UUID
 
-	// Attribution: resolve click_id within cookie window
+	// Attribution: resolve click_id first, then fall back to promo code
 	if input.ClickID != nil && *input.ClickID != "" {
 		click, err := s.trackingRepo.GetActiveClickForPartner(ctx, *input.ClickID)
 		if err == nil {
 			partnerID = &click.PartnerID
 			eventID = click.EventID
+		}
+	}
+	if partnerID == nil && input.PromoCode != nil && *input.PromoCode != "" {
+		promo, err := s.promoRepo.GetByCode(ctx, *input.PromoCode)
+		if err == nil {
+			partnerID = &promo.PartnerID
+			if promo.EventID != nil {
+				eventID = promo.EventID
+			}
+			_ = s.promoRepo.IncrementUses(ctx, *input.PromoCode)
 		}
 	}
 
@@ -179,11 +193,13 @@ func (s *TrackingService) ProcessOrderWebhook(ctx context.Context, input OrderWe
 		return err
 	}
 
-	// Calculate commission if attributed
+	// Calculate commission and check tier upgrade if attributed
 	if partnerID != nil && status == domain.OrderCompleted {
 		if err := s.commSvc.Calculate(ctx, order); err != nil {
 			return err
 		}
+		// Non-blocking: tier upgrade failure doesn't block order processing
+		_ = s.commSvc.CheckAndUpgradeTier(ctx, *partnerID)
 	}
 
 	return nil

@@ -45,7 +45,7 @@ func (s *PayoutService) RequestPayout(ctx context.Context, input RequestPayoutIn
 	}
 
 	kyc, err := s.partnerRepo.GetKYC(ctx, input.PartnerID)
-	if err != nil {
+	if err != nil || kyc.Status != "verified" {
 		return nil, domain.ErrKYCNotVerified
 	}
 

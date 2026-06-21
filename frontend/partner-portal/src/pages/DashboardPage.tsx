@@ -36,7 +36,7 @@ export function DashboardPage() {
       {/* Welcome banner */}
       {partner && (
         <div className={`bg-gradient-to-r ${tierColors[partner.tier] || 'from-brand-500 to-brand-600'} rounded-2xl p-5 text-white`}>
-          <p className="text-sm opacity-80">Привет,</p>
+          <p className="text-sm opacity-80">{t('dashboard.welcome')}</p>
           <h1 className="text-xl font-bold">{partner.full_name}</h1>
           <div className="flex items-center gap-2 mt-2">
             <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-semibold uppercase">
@@ -105,7 +105,7 @@ export function DashboardPage() {
       {/* Chart */}
       {series && series.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">Клики и заказы (30 дней)</h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">{t('dashboard.chartTitle')}</h2>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={series} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

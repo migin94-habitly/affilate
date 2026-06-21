@@ -115,6 +115,17 @@ export interface LegalDocument {
   updated_at: string
 }
 
+export interface PromoCode {
+  id: string
+  code: string
+  partner_id: string
+  event_id?: string
+  is_active: boolean
+  uses_count: number
+  created_at: string
+  updated_at: string
+}
+
 export interface AuthResult {
   token: string
   refresh_token: string

@@ -168,7 +168,7 @@ export function EventsPage() {
                   loading={generateMutation.isPending}
                   onClick={() => generateMutation.mutate(selectedEvent.id)}
                 >
-                  Сгенерировать ссылку
+                  {t('links.generate')}
                 </Button>
               </div>
             ) : (
@@ -177,7 +177,7 @@ export function EventsPage() {
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">{t('links.trackingUrl')}</p>
                   <p className="text-sm font-mono text-gray-800 break-all">
-                    {window.location.origin + generatedLink.tracking_url}
+                    {generatedLink.tracking_url}
                   </p>
                 </div>
                 {generatedLink.qr_code_url && (
@@ -188,12 +188,12 @@ export function EventsPage() {
                 <div className="flex gap-2">
                   <Button
                     full
-                    onClick={() => handleCopy(window.location.origin + generatedLink.tracking_url)}
+                    onClick={() => handleCopy(generatedLink.tracking_url)}
                   >
                     {copied ? t('common.copied') : t('common.copy')}
                   </Button>
                   <Button variant="outline" onClick={() => { setSelectedEvent(null); setGeneratedLink(null) }}>
-                    Закрыть
+                    {t('common.close')}
                   </Button>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth'
 const navItems = [
   { to: '/dashboard', label: 'nav.dashboard', icon: '📊' },
   { to: '/events', label: 'nav.events', icon: '🎟️' },
+  { to: '/promo-codes', label: 'nav.promoCodes', icon: '🎫' },
   { to: '/payouts', label: 'nav.payouts', icon: '💳' },
   { to: '/documents', label: 'nav.documents', icon: '📄' },
   { to: '/profile', label: 'nav.profile', icon: '👤' }
@@ -140,9 +141,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav — show the 5 most important items */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-30">
-        {navItems.slice(0, 5).map(item => (
+        {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[5]].map(item => (
           <NavLink
             key={item.to}
             to={item.to}

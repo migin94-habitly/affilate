@@ -5,7 +5,6 @@ import (
 
 	"github.com/ticketon/tap/internal/domain"
 	"github.com/ticketon/tap/internal/handler"
-	"github.com/ticketon/tap/internal/middleware"
 	"github.com/ticketon/tap/internal/service"
 )
 
@@ -70,11 +69,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	handler.JSON(w, http.StatusOK, result)
 }
 
-func (h *AuthHandler) Me(partnerRepo interface {
-	GetByID(ctx interface{}, id interface{}) (*domain.Partner, error)
-}) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := middleware.GetPartnerID(r.Context())
-		handler.JSON(w, http.StatusOK, map[string]interface{}{"id": id})
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		RefreshToken string `json:"refresh_token"`
 	}
+	if err := handler.ParseJSON(r, &input); err != nil || input.RefreshToken == "" {
+		handler.JSON(w, http.StatusBadRequest, map[string]string{"error": "refresh_token required"})
+		return
+	}
+
+	result, err := h.authSvc.RefreshPartnerToken(r.Context(), input.RefreshToken)
+	if err != nil {
+		handler.Error(w, err)
+		return
+	}
+	handler.JSON(w, http.StatusOK, result)
 }
