@@ -1,24 +1,34 @@
 import React from 'react'
+import { Spinner } from './PageLoader'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
   loading?: boolean
   full?: boolean
+  icon?: React.ReactNode
+  iconRight?: React.ReactNode
 }
 
 const variants = {
-  primary: 'bg-brand-500 hover:bg-brand-600 text-white shadow-sm',
-  secondary: 'bg-gray-800 hover:bg-gray-700 text-white',
-  outline: 'border border-brand-500 text-brand-500 hover:bg-brand-50',
-  ghost: 'text-gray-600 hover:bg-gray-100',
-  danger: 'bg-red-600 hover:bg-red-700 text-white'
+  primary: `bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white shadow-sm
+             hover:shadow-md dark:shadow-none`,
+  secondary: `bg-gray-900 hover:bg-gray-800 active:bg-gray-700 text-white dark:bg-gray-700 dark:hover:bg-gray-600`,
+  outline: `border border-gray-200 dark:border-gray-700
+            text-gray-700 dark:text-gray-300
+            hover:bg-gray-50 dark:hover:bg-gray-800/60
+            hover:border-gray-300 dark:hover:border-gray-600`,
+  ghost: `text-gray-600 dark:text-gray-400
+          hover:bg-gray-100 dark:hover:bg-gray-800/60
+          hover:text-gray-900 dark:hover:text-gray-100`,
+  danger: `bg-red-500 hover:bg-red-600 active:bg-red-700 text-white shadow-sm`
 }
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-6 py-3 text-base'
+  xs: 'px-2.5 py-1 text-xs gap-1.5',
+  sm: 'px-3.5 py-1.5 text-sm gap-1.5',
+  md: 'px-4 py-2.5 text-sm gap-2',
+  lg: 'px-6 py-3 text-base gap-2'
 }
 
 export function Button({
@@ -26,6 +36,8 @@ export function Button({
   size = 'md',
   loading = false,
   full = false,
+  icon,
+  iconRight,
   className = '',
   disabled,
   children,
@@ -35,18 +47,26 @@ export function Button({
     <button
       {...props}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors
-        focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${variants[variant]} ${sizes[size]} ${full ? 'w-full' : ''} ${className}`}
+      className={`
+        inline-flex items-center justify-center font-medium rounded-xl
+        transition-all duration-150 ease-out
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+        dark:focus-visible:ring-offset-gray-900
+        active:scale-[0.97]
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
+        ${variants[variant]}
+        ${sizes[size]}
+        ${full ? 'w-full' : ''}
+        ${className}
+      `}
     >
-      {loading && (
-        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      )}
-      {children}
+      {loading ? (
+        <Spinner className={size === 'xs' || size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+      ) : icon ? (
+        <span className="flex-shrink-0">{icon}</span>
+      ) : null}
+      {children && <span>{children}</span>}
+      {iconRight && !loading && <span className="flex-shrink-0">{iconRight}</span>}
     </button>
   )
 }

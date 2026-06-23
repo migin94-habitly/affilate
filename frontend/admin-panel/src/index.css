@@ -3,14 +3,38 @@
 @tailwind utilities;
 
 @layer base {
+  :root { color-scheme: light; }
+  .dark { color-scheme: dark; }
+
+  * { -webkit-tap-highlight-color: transparent; }
+
+  html { scroll-behavior: smooth; }
+
   body {
-    @apply text-gray-900 antialiased;
+    @apply font-sans antialiased bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100;
+    transition: background-color 0.3s ease, color 0.2s ease;
   }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-gray-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-gray-500; }
 }
 
 @layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
+  .skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden relative;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+  .dark .skeleton::after {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
   }
   .line-clamp-2 {
     display: -webkit-box;
@@ -18,4 +42,5 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .scrollbar-thin { scrollbar-width: thin; }
 }
