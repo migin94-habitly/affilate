@@ -124,6 +124,59 @@ func TestGenerateLink_DefaultChannelWeb(t *testing.T) {
 	}
 }
 
+func TestGenerateLink_EventNotFound_ReturnsError(t *testing.T) {
+	partnerID := uuid.New()
+	nonExistentEventID := uuid.New()
+
+	svc := newTrackingSvc(
+		testutil.NewMockTrackingRepo(),
+		testutil.NewMockPartnerRepo(),
+		testutil.NewMockEventRepo(), // empty event repo
+		testutil.NewMockPromoRepo(),
+		&testutil.MockCommissionSvc{},
+	)
+
+	_, err := svc.GenerateLink(context.Background(), service.GenerateLinkInput{
+		PartnerID: partnerID,
+		EventID:   &nonExistentEventID,
+		Channel:   "web",
+	})
+	if err == nil {
+		t.Error("expected error for non-existent event, got nil")
+	}
+}
+
+func TestGenerateLink_CookieExpiryIs30Days(t *testing.T) {
+	partnerID := uuid.New()
+	trackRepo := testutil.NewMockTrackingRepo()
+	svc := newTrackingSvc(trackRepo, testutil.NewMockPartnerRepo(), testutil.NewMockEventRepo(), testutil.NewMockPromoRepo(), &testutil.MockCommissionSvc{})
+
+	result, err := svc.GenerateLink(context.Background(), service.GenerateLinkInput{PartnerID: partnerID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	click := trackRepo.Clicks[result.ClickID]
+	daysUntilExpiry := int(time.Until(click.CookieExpires).Hours() / 24)
+	if daysUntilExpiry < 29 || daysUntilExpiry > 30 {
+		t.Errorf("cookie expiry = %d days, want ~30", daysUntilExpiry)
+	}
+}
+
+func TestGenerateLink_QRCodeContainsTrackingURL(t *testing.T) {
+	partnerID := uuid.New()
+	svc := newTrackingSvc(testutil.NewMockTrackingRepo(), testutil.NewMockPartnerRepo(), testutil.NewMockEventRepo(), testutil.NewMockPromoRepo(), &testutil.MockCommissionSvc{})
+
+	result, err := svc.GenerateLink(context.Background(), service.GenerateLinkInput{PartnerID: partnerID, Channel: "web"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(result.QRCodeURL, "qrserver.com") {
+		t.Errorf("QRCodeURL should use qrserver.com, got: %s", result.QRCodeURL)
+	}
+}
+
 func TestProcessOrderWebhook_WrongSecret(t *testing.T) {
 	svc := newTrackingSvc(
 		testutil.NewMockTrackingRepo(),
@@ -142,6 +195,26 @@ func TestProcessOrderWebhook_WrongSecret(t *testing.T) {
 	}, "correct-secret")
 	if err != domain.ErrUnauthorized {
 		t.Errorf("expected ErrUnauthorized for wrong secret, got %v", err)
+	}
+}
+
+func TestProcessOrderWebhook_EmptySecret_Rejected(t *testing.T) {
+	svc := newTrackingSvc(
+		testutil.NewMockTrackingRepo(),
+		testutil.NewMockPartnerRepo(),
+		testutil.NewMockEventRepo(),
+		testutil.NewMockPromoRepo(),
+		&testutil.MockCommissionSvc{},
+	)
+
+	err := svc.ProcessOrderWebhook(context.Background(), service.OrderWebhookInput{
+		ExternalOrderID: "order-empty",
+		TotalAmount:     1000.0,
+		Status:          "completed",
+		WebhookSecret:   "",
+	}, "required-secret")
+	if err != domain.ErrUnauthorized {
+		t.Errorf("expected ErrUnauthorized for empty secret, got %v", err)
 	}
 }
 
@@ -297,6 +370,103 @@ func TestProcessOrderWebhook_RefundedOrder_NoCommission(t *testing.T) {
 	}
 }
 
+func TestProcessOrderWebhook_CancelledOrder_NoCommission(t *testing.T) {
+	partnerID := uuid.New()
+	clickID := "click-cancel"
+
+	trackRepo := testutil.NewMockTrackingRepo()
+	trackRepo.Clicks[clickID] = &domain.TrackingClick{
+		ClickID:       clickID,
+		PartnerID:     partnerID,
+		CookieExpires: time.Now().Add(30 * 24 * time.Hour),
+	}
+
+	commSvc := &testutil.MockCommissionSvc{}
+	svc := newTrackingSvc(trackRepo, testutil.NewMockPartnerRepo(), testutil.NewMockEventRepo(), testutil.NewMockPromoRepo(), commSvc)
+
+	if err := svc.ProcessOrderWebhook(context.Background(), service.OrderWebhookInput{
+		ExternalOrderID: "order-cancelled",
+		ClickID:         &clickID,
+		TotalAmount:     7000.0,
+		Status:          "cancelled",
+		WebhookSecret:   "secret",
+	}, "secret"); err != nil {
+		t.Fatalf("webhook error: %v", err)
+	}
+
+	if len(commSvc.CalledCalculate) != 0 {
+		t.Error("commission should not be calculated for cancelled orders")
+	}
+}
+
+func TestProcessOrderWebhook_NoAttribution_OrderSavedWithoutPartner(t *testing.T) {
+	trackRepo := testutil.NewMockTrackingRepo()
+	commSvc := &testutil.MockCommissionSvc{}
+	svc := newTrackingSvc(trackRepo, testutil.NewMockPartnerRepo(), testutil.NewMockEventRepo(), testutil.NewMockPromoRepo(), commSvc)
+
+	if err := svc.ProcessOrderWebhook(context.Background(), service.OrderWebhookInput{
+		ExternalOrderID: "order-unattributed",
+		TotalAmount:     3000.0,
+		Status:          "completed",
+		WebhookSecret:   "secret",
+	}, "secret"); err != nil {
+		t.Fatalf("webhook error: %v", err)
+	}
+
+	// Order should be saved
+	if len(trackRepo.Orders) != 1 {
+		t.Errorf("expected 1 order saved, got %d", len(trackRepo.Orders))
+	}
+	// No commission since no partner attribution
+	if len(commSvc.CalledCalculate) != 0 {
+		t.Error("commission should not be calculated without attribution")
+	}
+}
+
+func TestProcessOrderWebhook_ClickID_PrefersClickOverPromo(t *testing.T) {
+	clickPartnerID := uuid.New()
+	promoPartnerID := uuid.New()
+	clickID := "priority-click"
+
+	trackRepo := testutil.NewMockTrackingRepo()
+	trackRepo.Clicks[clickID] = &domain.TrackingClick{
+		ClickID:       clickID,
+		PartnerID:     clickPartnerID,
+		CookieExpires: time.Now().Add(30 * 24 * time.Hour),
+	}
+
+	promoRepo := testutil.NewMockPromoRepo()
+	promoCode := "PROMO999"
+	promoRepo.Codes[promoCode] = &domain.PromoCode{
+		Code:      promoCode,
+		PartnerID: promoPartnerID,
+		IsActive:  true,
+	}
+
+	commSvc := &testutil.MockCommissionSvc{}
+	svc := newTrackingSvc(trackRepo, testutil.NewMockPartnerRepo(), testutil.NewMockEventRepo(), promoRepo, commSvc)
+
+	pc := promoCode
+	if err := svc.ProcessOrderWebhook(context.Background(), service.OrderWebhookInput{
+		ExternalOrderID: "order-priority",
+		ClickID:         &clickID,
+		PromoCode:       &pc,
+		TotalAmount:     5000.0,
+		Status:          "completed",
+		WebhookSecret:   "secret",
+	}, "secret"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Click attribution should win over promo
+	if len(commSvc.CalledCalculate) != 1 {
+		t.Fatal("expected commission to be calculated")
+	}
+	if *commSvc.CalledCalculate[0].PartnerID != clickPartnerID {
+		t.Error("click partner should win over promo partner for attribution")
+	}
+}
+
 func TestRecordClick_AppendsClickParam(t *testing.T) {
 	clickID := "test-click-123"
 	trackRepo := testutil.NewMockTrackingRepo()
@@ -344,5 +514,77 @@ func TestRecordClick_UnknownClickID_ReturnsBase(t *testing.T) {
 	}
 	if cookieExpires.IsZero() {
 		t.Error("cookieExpires should not be zero even for unknown click")
+	}
+}
+
+func TestRecordClick_WithEventURL(t *testing.T) {
+	clickID := "click-with-event"
+	eventID := uuid.New()
+	eventURL := "https://ticketon.kz/event/jazz-festival"
+
+	trackRepo := testutil.NewMockTrackingRepo()
+	trackRepo.Clicks[clickID] = &domain.TrackingClick{
+		ClickID:       clickID,
+		EventID:       &eventID,
+		CookieExpires: time.Now().Add(30 * 24 * time.Hour),
+	}
+
+	eventRepo := testutil.NewMockEventRepo()
+	eventRepo.Events[eventID] = &domain.Event{
+		ID:      eventID,
+		BaseURL: eventURL,
+	}
+
+	svc := newTrackingSvc(trackRepo, testutil.NewMockPartnerRepo(), eventRepo, testutil.NewMockPromoRepo(), &testutil.MockCommissionSvc{})
+
+	destURL, _, err := svc.RecordClick(context.Background(), clickID, "", "", "")
+	if err != nil {
+		t.Fatalf("RecordClick error: %v", err)
+	}
+	if !strings.Contains(destURL, "jazz-festival") {
+		t.Errorf("dest URL should contain event URL, got: %s", destURL)
+	}
+	if !strings.Contains(destURL, "tap_click="+clickID) {
+		t.Errorf("dest URL should contain tap_click param, got: %s", destURL)
+	}
+}
+
+func TestGetStats_ReturnsPeriodAndBalance(t *testing.T) {
+	partnerID := uuid.New()
+	partnerRepo := testutil.NewMockPartnerRepo()
+	partnerRepo.Balances[partnerID] = &domain.PartnerBalance{
+		PartnerID:       partnerID,
+		PendingAmount:   2500.0,
+		AvailableAmount: 7500.0,
+	}
+
+	trackRepo := testutil.NewMockTrackingRepo()
+	svc := newTrackingSvc(trackRepo, partnerRepo, testutil.NewMockEventRepo(), testutil.NewMockPromoRepo(), &testutil.MockCommissionSvc{})
+
+	stats, err := svc.GetStats(context.Background(), partnerID, "30d")
+	if err != nil {
+		t.Fatalf("GetStats error: %v", err)
+	}
+	if stats.Period != "30d" {
+		t.Errorf("Period = %s, want 30d", stats.Period)
+	}
+	if stats.PendingAmount != 2500.0 {
+		t.Errorf("PendingAmount = %.2f, want 2500", stats.PendingAmount)
+	}
+	if stats.AvailableAmount != 7500.0 {
+		t.Errorf("AvailableAmount = %.2f, want 7500", stats.AvailableAmount)
+	}
+}
+
+func TestGetClickTimeSeries_Empty(t *testing.T) {
+	svc := newTrackingSvc(testutil.NewMockTrackingRepo(), testutil.NewMockPartnerRepo(), testutil.NewMockEventRepo(), testutil.NewMockPromoRepo(), &testutil.MockCommissionSvc{})
+
+	points, err := svc.GetClickTimeSeries(context.Background(), uuid.New(), 7)
+	if err != nil {
+		t.Fatalf("GetClickTimeSeries error: %v", err)
+	}
+	// Mock returns nil, should be an empty/nil slice — no panic
+	if len(points) != 0 {
+		t.Errorf("expected 0 data points from empty mock, got %d", len(points))
 	}
 }

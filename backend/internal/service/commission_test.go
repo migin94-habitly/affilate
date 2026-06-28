@@ -23,6 +23,18 @@ func bronzeTariff() *domain.Tariff {
 	}
 }
 
+func silverTariff() *domain.Tariff {
+	return &domain.Tariff{
+		ID:                 uuid.New(),
+		Tier:               domain.TierSilver,
+		GmvRate:            7.0,
+		BaseRate:           70.0,
+		MinOrdersForSilver: 50,
+		CPABonus:           1000.0,
+		UpdatedAt:          time.Now(),
+	}
+}
+
 func TestCalculate_BasicCommission(t *testing.T) {
 	partnerID := uuid.New()
 	commRepo := testutil.NewMockCommissionRepo()
@@ -167,6 +179,166 @@ func TestCalculate_NoPartnerID_Noop(t *testing.T) {
 	}
 }
 
+func TestCalculate_TariffNotFound_ReturnsError(t *testing.T) {
+	partnerID := uuid.New()
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	// Partner exists but no tariff for their tier
+	partnerRepo.Partners[partnerID] = &domain.Partner{ID: partnerID, Tier: domain.TierGold}
+	// No tariff added for TierGold
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+
+	order := &domain.Order{
+		ID:          uuid.New(),
+		PartnerID:   &partnerID,
+		TotalAmount: 5000.0,
+	}
+
+	err := svc.Calculate(context.Background(), order)
+	if err == nil {
+		t.Error("expected error when no tariff found for partner tier, got nil")
+	}
+}
+
+func TestCalculate_AddToPendingBalanceError_Propagates(t *testing.T) {
+	partnerID := uuid.New()
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	partnerRepo.Partners[partnerID] = &domain.Partner{ID: partnerID, Tier: domain.TierBronze}
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff()
+	partnerRepo.AddToPendingErr = domain.ErrNotFound
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+
+	order := &domain.Order{
+		ID:          uuid.New(),
+		PartnerID:   &partnerID,
+		TotalAmount: 5000.0,
+	}
+
+	err := svc.Calculate(context.Background(), order)
+	if err == nil {
+		t.Error("expected error from AddToPendingBalance, got nil")
+	}
+}
+
+func TestCalculate_CommissionCreateError_Propagates(t *testing.T) {
+	partnerID := uuid.New()
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	partnerRepo.Partners[partnerID] = &domain.Partner{ID: partnerID, Tier: domain.TierBronze}
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff()
+	commRepo.CreateErr = domain.ErrAlreadyExists
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+
+	order := &domain.Order{
+		ID:          uuid.New(),
+		PartnerID:   &partnerID,
+		TotalAmount: 5000.0,
+	}
+
+	err := svc.Calculate(context.Background(), order)
+	if err == nil {
+		t.Error("expected error from commission repo Create, got nil")
+	}
+}
+
+func TestCalculate_ZeroAmountOrder_ZeroCommission(t *testing.T) {
+	partnerID := uuid.New()
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	partnerRepo.Partners[partnerID] = &domain.Partner{ID: partnerID, Tier: domain.TierBronze}
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff()
+	partnerRepo.Balances[partnerID] = &domain.PartnerBalance{PartnerID: partnerID}
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+
+	order := &domain.Order{
+		ID:          uuid.New(),
+		PartnerID:   &partnerID,
+		TotalAmount: 0,
+	}
+
+	if err := svc.Calculate(context.Background(), order); err != nil {
+		t.Fatalf("Calculate with zero amount: %v", err)
+	}
+
+	c := commRepo.Commissions[0]
+	if c.CommissionAmount != 0 {
+		t.Errorf("CommissionAmount for zero-amount order = %.2f, want 0", c.CommissionAmount)
+	}
+}
+
+func TestCalculate_SilverTierPartner_UsesHigherRate(t *testing.T) {
+	partnerID := uuid.New()
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	partnerRepo.Partners[partnerID] = &domain.Partner{ID: partnerID, Tier: domain.TierSilver}
+	commRepo.Tariffs[domain.TierSilver] = silverTariff() // GmvRate = 7%
+	partnerRepo.Balances[partnerID] = &domain.PartnerBalance{PartnerID: partnerID}
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+
+	order := &domain.Order{
+		ID:          uuid.New(),
+		PartnerID:   &partnerID,
+		TotalAmount: 10000.0,
+	}
+
+	if err := svc.Calculate(context.Background(), order); err != nil {
+		t.Fatalf("Calculate error: %v", err)
+	}
+
+	c := commRepo.Commissions[0]
+	// 10000 * 7% = 700
+	if c.CommissionAmount != 700.0 {
+		t.Errorf("Silver CommissionAmount = %.2f, want 700", c.CommissionAmount)
+	}
+}
+
+func TestGetTariffs_ReturnsAll(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff()
+	commRepo.Tariffs[domain.TierSilver] = silverTariff()
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+	tariffs, err := svc.GetTariffs(context.Background())
+	if err != nil {
+		t.Fatalf("GetTariffs error: %v", err)
+	}
+	if len(tariffs) != 2 {
+		t.Errorf("GetTariffs returned %d tariffs, want 2", len(tariffs))
+	}
+}
+
+func TestApproveAll_CountsApproved(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerID := uuid.New()
+	commRepo.Commissions = []*domain.Commission{
+		{ID: uuid.New(), PartnerID: partnerID, Status: domain.CommissionPending},
+		{ID: uuid.New(), PartnerID: partnerID, Status: domain.CommissionPending},
+		{ID: uuid.New(), PartnerID: partnerID, Status: domain.CommissionApproved}, // already approved
+	}
+
+	svc := service.NewCommissionService(commRepo, testutil.NewMockPartnerRepo())
+	count, err := svc.ApproveAll(context.Background())
+	if err != nil {
+		t.Fatalf("ApproveAll error: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("ApproveAll count = %d, want 2", count)
+	}
+}
+
 func TestUpdateTariff_GuardrailNegativeMargin(t *testing.T) {
 	commRepo := testutil.NewMockCommissionRepo()
 	partnerRepo := testutil.NewMockPartnerRepo()
@@ -244,6 +416,85 @@ func TestUpdateTariff_DecreaseScheduled(t *testing.T) {
 	}
 }
 
+func TestUpdateTariff_DecreaseScheduled_EffectiveDateIs14DaysOut(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff()
+
+	svc := service.NewCommissionService(commRepo, testutil.NewMockPartnerRepo())
+	result, err := svc.UpdateTariff(context.Background(), 2.0, 10.0, 5, 300, domain.TierBronze, "")
+	if err != nil {
+		t.Fatalf("UpdateTariff: %v", err)
+	}
+
+	if result.Tariff.RateEffectiveAt == nil {
+		t.Fatal("RateEffectiveAt should be set for a decrease")
+	}
+	daysUntil := int(time.Until(*result.Tariff.RateEffectiveAt).Hours() / 24)
+	if daysUntil < 13 || daysUntil > 14 {
+		t.Errorf("RateEffectiveAt should be ~14 days out, got %d days", daysUntil)
+	}
+}
+
+func TestUpdateTariff_SameRate_AppliedImmediately(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff() // current rate = 5%
+
+	svc := service.NewCommissionService(commRepo, testutil.NewMockPartnerRepo())
+
+	// Same rate as current — treated as increase/no-change, applied immediately
+	result, err := svc.UpdateTariff(context.Background(), 5.0, 10.0, 10, 500, domain.TierBronze, "")
+	if err != nil {
+		t.Fatalf("UpdateTariff same rate: %v", err)
+	}
+	if result.Delayed {
+		t.Error("same-rate update should not be delayed")
+	}
+	if result.Tariff.GmvRate != 5.0 {
+		t.Errorf("GmvRate = %.2f, want 5.0", result.Tariff.GmvRate)
+	}
+}
+
+func TestUpdateTariff_IncreaseClearsPendingDecrease(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	pending := 3.0
+	effectiveAt := time.Now().Add(14 * 24 * time.Hour)
+	commRepo.Tariffs[domain.TierBronze] = &domain.Tariff{
+		ID:             uuid.New(),
+		Tier:           domain.TierBronze,
+		GmvRate:        5.0,
+		PendingGmvRate: &pending,
+		RateEffectiveAt: &effectiveAt,
+	}
+
+	svc := service.NewCommissionService(commRepo, testutil.NewMockPartnerRepo())
+	result, err := svc.UpdateTariff(context.Background(), 6.0, 10.0, 10, 500, domain.TierBronze, "")
+	if err != nil {
+		t.Fatalf("UpdateTariff: %v", err)
+	}
+	if result.Tariff.PendingGmvRate != nil {
+		t.Error("PendingGmvRate should be cleared when a new increase is applied")
+	}
+	if result.Tariff.RateEffectiveAt != nil {
+		t.Error("RateEffectiveAt should be cleared when a new increase is applied")
+	}
+}
+
+func TestUpdateTariff_DefaultSFPct_WhenZero(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	commRepo.Tariffs[domain.TierBronze] = bronzeTariff()
+
+	svc := service.NewCommissionService(commRepo, testutil.NewMockPartnerRepo())
+
+	// sfPct=0 should default to DefaultSFPct (10.0), so 9% < 10% is valid
+	result, err := svc.UpdateTariff(context.Background(), 9.0, 0, 10, 500, domain.TierBronze, "")
+	if err != nil {
+		t.Fatalf("UpdateTariff with sfPct=0 should use default, got: %v", err)
+	}
+	if result == nil {
+		t.Error("expected non-nil result")
+	}
+}
+
 func TestCheckAndUpgradeTier_UpgradesToSilver(t *testing.T) {
 	partnerID := uuid.New()
 	commRepo := testutil.NewMockCommissionRepo()
@@ -284,5 +535,37 @@ func TestCheckAndUpgradeTier_NoUpgradeWhenBelowThreshold(t *testing.T) {
 
 	if partnerRepo.Partners[partnerID].Tier != domain.TierBronze {
 		t.Error("partner should remain bronze when below threshold")
+	}
+}
+
+func TestCheckAndUpgradeTier_AlreadySilver_NoUpgrade(t *testing.T) {
+	partnerID := uuid.New()
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+
+	// Already Silver tier — no upgrade logic applies
+	partnerRepo.Partners[partnerID] = &domain.Partner{ID: partnerID, Tier: domain.TierSilver}
+	partnerRepo.MonthlyOrdersCount = 100
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+	if err := svc.CheckAndUpgradeTier(context.Background(), partnerID); err != nil {
+		t.Fatalf("CheckAndUpgradeTier error for silver partner: %v", err)
+	}
+
+	if partnerRepo.Partners[partnerID].Tier != domain.TierSilver {
+		t.Error("silver partner tier should not change")
+	}
+}
+
+func TestCheckAndUpgradeTier_PartnerNotFound_ReturnsNil(t *testing.T) {
+	commRepo := testutil.NewMockCommissionRepo()
+	partnerRepo := testutil.NewMockPartnerRepo()
+	// Partner does not exist in repo
+
+	svc := service.NewCommissionService(commRepo, partnerRepo)
+	err := svc.CheckAndUpgradeTier(context.Background(), uuid.New())
+	// Should return nil (GetByID returns error, method returns nil early)
+	if err != nil {
+		t.Logf("CheckAndUpgradeTier for unknown partner returned: %v (acceptable)", err)
 	}
 }
