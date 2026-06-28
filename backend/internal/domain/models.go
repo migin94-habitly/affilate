@@ -58,13 +58,42 @@ type Partner struct {
 }
 
 type PartnerKYC struct {
-	ID                uuid.UUID `json:"id"`
-	PartnerID         uuid.UUID `json:"partner_id"`
-	IIN               string    `json:"iin,omitempty"`
-	FreedomPayAccount string    `json:"freedom_pay_account"`
-	Status            string    `json:"status"`
+	ID                uuid.UUID  `json:"id"`
+	PartnerID         uuid.UUID  `json:"partner_id"`
+	IIN               string     `json:"iin,omitempty"`
+	BankName          string     `json:"bank_name,omitempty"`
+	BankAccount       string     `json:"bank_account,omitempty"`
+	BankBIC           string     `json:"bank_bic,omitempty"`
+	AccountHolder     string     `json:"account_holder,omitempty"`
+	FreedomPayAccount string     `json:"freedom_pay_account,omitempty"`
+	Status            string     `json:"status"`
 	VerifiedAt        *time.Time `json:"verified_at,omitempty"`
-	CreatedAt         time.Time `json:"created_at"`
+	CreatedAt         time.Time  `json:"created_at"`
+}
+
+// --- Partner Requests ---
+
+type PartnerRequest struct {
+	ID        uuid.UUID `json:"id"`
+	PartnerID uuid.UUID `json:"partner_id"`
+	// PartnerName is populated on read via JOIN
+	PartnerName string    `json:"partner_name,omitempty"`
+	Type        string    `json:"type"`
+	Subject     string    `json:"subject"`
+	Body        string    `json:"body"`
+	Status      string    `json:"status"`
+	Notes       []RequestNote `json:"notes,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type RequestNote struct {
+	ID        uuid.UUID `json:"id"`
+	RequestID uuid.UUID `json:"request_id"`
+	AdminID   uuid.UUID `json:"admin_id"`
+	AdminName string    `json:"admin_name,omitempty"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type OfferAcceptance struct {
@@ -207,7 +236,9 @@ type Payout struct {
 	PartnerID         uuid.UUID    `json:"partner_id"`
 	Amount            float64      `json:"amount"`
 	Currency          string       `json:"currency"`
-	FreedomPayAccount string       `json:"freedom_pay_account"`
+	BankName          string       `json:"bank_name,omitempty"`
+	BankAccount       string       `json:"bank_account,omitempty"`
+	FreedomPayAccount string       `json:"freedom_pay_account,omitempty"`
 	Status            PayoutStatus `json:"status"`
 	FreedomPayRef     *string      `json:"freedom_pay_ref,omitempty"`
 	RequestedAt       time.Time    `json:"requested_at"`

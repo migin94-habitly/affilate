@@ -3,7 +3,7 @@ import type {
   AuthResult, Partner, PartnerKYC, PartnerBalance,
   Event, GeneratedLink, PartnerStats, ClickDataPoint,
   Payout, LegalDocument, LegalStatus, Paginated, PromoCode,
-  Notification, FAQItem, ContactInfo
+  Notification, FAQItem, ContactInfo, PartnerRequest
 } from '@/types'
 
 // Auth
@@ -23,8 +23,14 @@ export const getProfile = () =>
 export const updateProfile = (data: Partial<Partner>) =>
   api.put<Partner>('/partner/profile', data).then(r => r.data)
 
-export const submitKYC = (data: { iin?: string; freedom_pay_account: string }) =>
-  api.post<PartnerKYC>('/partner/kyc', data).then(r => r.data)
+export const submitKYC = (data: {
+  iin?: string
+  bank_name?: string
+  bank_account?: string
+  bank_bic?: string
+  account_holder?: string
+  freedom_pay_account?: string
+}) => api.post<PartnerKYC>('/partner/kyc', data).then(r => r.data)
 
 export const acceptOffer = (language: string) =>
   api.post('/partner/offer/accept', { language }).then(r => r.data)
@@ -106,3 +112,10 @@ export const getFAQ = () =>
 
 export const getContacts = () =>
   api.get<ContactInfo[]>('/partner/contacts').then(r => r.data)
+
+// Partner Requests
+export const getRequests = (page = 1) =>
+  api.get<Paginated<PartnerRequest>>('/partner/requests', { params: { page } }).then(r => r.data)
+
+export const createRequest = (data: { type: string; subject: string; body: string }) =>
+  api.post<PartnerRequest>('/partner/requests', data).then(r => r.data)

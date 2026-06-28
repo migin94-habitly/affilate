@@ -13,6 +13,7 @@ import { FraudPage } from '@/pages/FraudPage'
 import { EventsPage } from '@/pages/EventsPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
 import { FAQPage } from '@/pages/FAQPage'
+import { RequestsPage } from '@/pages/RequestsPage'
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } }
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/payouts"     element={<ProtectedRoute><AdminLayout><PayoutsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/documents"   element={<ProtectedRoute><AdminLayout><DocumentsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><AdminLayout><NotificationsPage /></AdminLayout></ProtectedRoute>} />
+            <Route path="/requests"      element={<ProtectedRoute><AdminLayout><RequestsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/fraud"        element={<ProtectedRoute><AdminLayout><FraudPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/faq"         element={<ProtectedRoute><AdminLayout><FAQPage /></AdminLayout></ProtectedRoute>} />
             <Route path="*"            element={<Navigate to="/dashboard" replace />} />

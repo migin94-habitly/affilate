@@ -3,6 +3,7 @@ export default {
     loading: 'Yükleniyor...',
     save: 'Kaydet',
     cancel: 'İptal',
+    close: 'Kapat',
     next: 'İleri',
     back: 'Geri',
     submit: 'Gönder',
@@ -16,8 +17,12 @@ export default {
     dashboard: 'Gösterge Paneli',
     events: 'Etkinlikler',
     links: 'Bağlantılar',
+    promoCodes: 'Promosyon Kodları',
     payouts: 'Ödemeler',
     documents: 'Belgeler',
+    requests: 'Talepler',
+    faq: 'SSS',
+    notifications: 'Bildirimler',
     profile: 'Profil',
     logout: 'Çıkış'
   },
@@ -42,23 +47,54 @@ export default {
   onboarding: {
     step1: 'Ortak Türü',
     step2: 'İletişim',
-    step3: 'Freedom Pay',
+    step3: 'Banka Bilgileri',
     step4: 'Teklif',
-    title: 'TAP\'a Hoş Geldiniz',
+    title: "TAP'a Hoş Geldiniz",
     subtitle: 'Kaydı 4 basit adımda tamamlayın',
-    freedomPayHint: 'Tüm ödemeler Freedom Pay üzerinden Tenge (KZT) cinsinden yapılır',
+    freedomPayHint: 'Ödemeler banka hesabınıza KZT cinsinden yapılır',
     offerTitle: 'Ortaklık Teklifi',
     offerText: 'Ticketon Affiliate Platform ortaklık sözleşmesinin koşullarını kabul ediyorum.',
-    accept: 'Teklifi Kabul Et'
+    accept: 'Teklifi Kabul Et',
+    checklistTitle: 'Başlarken',
+    checklistDone: 'tamamlandı',
+    steps: {
+      account: 'Hesap oluşturuldu',
+      kyc: 'Banka bilgileri dolduruldu',
+      kycLink: 'Doldur',
+      offer: 'Teklif kabul edildi',
+      offerLink: 'Kabul et',
+      documents: 'Belge süreci başlatıldı',
+      documentsLink: 'Başlat',
+    }
+  },
+  kyc: {
+    title: 'Banka Bilgileri',
+    subtitle: 'Ödeme almak için banka bilgilerinizi girin',
+    iin: 'Vergi No (isteğe bağlı)',
+    accountHolder: 'Hesap sahibi',
+    accountHolderPlaceholder: 'Ad soyad veya şirket adı',
+    bankName: 'Banka adı',
+    bankNamePlaceholder: 'Örn: Halyk Bank, Kaspi, Freedom Pay...',
+    bankAccount: 'Hesap numarası / IBAN',
+    bankBic: 'BIC / Swift kodu',
+    bankBicPlaceholder: 'HSBKKZKX',
+    freedomPayOptional: 'Freedom Pay kullanıyorsanız — hesap numaranızı girin',
+    accountOptional: '(isteğe bağlı)',
+    freedomPayPlaceholder: 'Freedom Pay hesap numarası veya e-posta',
+    save: 'Banka bilgilerini kaydet',
+    verified: 'Bilgiler doğrulandı',
+    verifiedDesc: 'Ödeme bilgileri başarıyla doğrulandı'
   },
   dashboard: {
     title: 'Gösterge Paneli',
+    welcome: 'Merhaba,',
     clicks: 'Tıklamalar',
     orders: 'Siparişler',
     earned: 'Kazanç',
     conversion: 'Dönüşüm',
     balance: 'Mevcut Bakiye',
     pending: 'İşlemde',
+    chartTitle: 'Tıklamalar ve siparişler (30 gün)',
     period: {
       day: 'Bugün',
       week: 'Hafta',
@@ -73,10 +109,16 @@ export default {
     allCities: 'Tüm Şehirler',
     allCategories: 'Tüm Kategoriler',
     getLink: 'Bağlantı Al',
-    noEvents: 'Etkinlik Bulunamadı'
+    noEvents: 'Etkinlik Bulunamadı',
+    goldTitle: 'Ticketon.kz Tam Kataloğu',
+    goldDesc: 'Gold ortak olarak açık API aracılığıyla tüm ticketon.kz etkinliklerine erişebilirsiniz',
+    goldApiAccess: 'Ticketon açık API erişimi etkinleştirildi — platformun tüm etkinlikleri tanıtım için kullanılabilir',
+    resetFilters: 'Filtreleri temizle',
+    totalEvents: 'etkinlik'
   },
   links: {
     title: 'Bağlantı Üreticisi',
+    generate: 'Bağlantı oluştur',
     generated: 'Bağlantınız Hazır',
     trackingUrl: 'Takip Bağlantısı',
     channel: 'Yayın Kanalı',
@@ -88,11 +130,34 @@ export default {
       web: 'Web Sitesi'
     }
   },
+  promoCodes: {
+    title: 'Promosyon Kodları',
+    description: 'Promosyon kodu — bağlantıların kopyalandığında kaybolduğu Hikayeler ve gönderiler için alternatif atıf yöntemi',
+    create: 'Promosyon kodu oluştur',
+    code: 'Kod',
+    codePlaceholder: 'Örn: VASYA2026',
+    eventOptional: 'Etkinlik (isteğe bağlı)',
+    noEvent: 'Tüm etkinlikler',
+    uses: 'kullanım',
+    active: 'Aktif',
+    inactive: 'Devre dışı',
+    deactivate: 'Devre dışı bırak',
+    noCodes: 'Henüz promosyon kodu yok'
+  },
   payouts: {
     title: 'Ödemeler',
     request: 'Ödeme Talep Et',
-    amount: 'Tutar',
+    requestTitle: 'Yeni ödeme talebi',
+    submit: 'Talebi gönder',
+    amount: 'Ödeme miktarı',
     minThreshold: 'Minimum tutar: 5.000 ₸',
+    minError: 'Minimum ödeme miktarı — 5.000 ₸',
+    insufficientBalance: 'Yetersiz bakiye',
+    availableToWithdraw: 'Çekilebilir',
+    paid: 'Ödendi',
+    willSendTo: 'Fonlar şu adrese gönderilecek:',
+    destination: 'Ödeme bilgileri',
+    noBankDetails: 'Ödeme talep etmek için profilinizdeki banka bilgilerini doldurun',
     status: {
       requested: 'Talep Edildi',
       processing: 'İşlemde',
@@ -100,7 +165,8 @@ export default {
       failed: 'Hata'
     },
     history: 'Ödeme Geçmişi',
-    freedomPayOnly: 'Ödemeler yalnızca Freedom Pay üzerinden KZT cinsinden yapılır'
+    emptyTitle: 'Henüz ödeme yok',
+    emptyDesc: 'Minimum miktara ulaştığınızda ödeme talep edin'
   },
   documents: {
     title: 'Belgeler',
@@ -132,6 +198,59 @@ export default {
     download: 'İndir',
     downloadFinal: 'Son Belgeyi İndir',
     initiateTitle: 'Belge Sürecini Başlat',
-    chooseStatus: 'Belge paketini oluşturmak için hukuki durumunuzu seçin'
+    chooseStatus: 'Belge paketini oluşturmak için hukuki durumunuzu seçin',
+    confirmStatus: 'Durumu onaylayın:',
+    confirmDesc: 'Durumunuz için belge paketi oluşturulacak.',
+    createPackage: 'Belge paketi oluştur',
+    rejectionReason: 'Red nedeni:',
+    uploadHint: 'İmzalanmış belgeye bağlantı yükleyin (Google Drive, Dropbox veya başka bir bulut depolama)',
+    uploadBtn: 'Yükle'
+  },
+  notifications: {
+    title: 'Bildirimler',
+    markAllRead: 'Tümünü okundu işaretle',
+    empty: 'Henüz bildirim yok'
+  },
+  requests: {
+    title: 'Taleplerim',
+    subtitle: 'Destek talebi gönderin ve durumlarını takip edin',
+    new: 'Yeni talep',
+    newTitle: 'Talep oluştur',
+    type: 'Talep türü',
+    subject: 'Konu',
+    subjectPlaceholder: 'Sorununuzu veya sorunuzu kısaca açıklayın',
+    body: 'Açıklama',
+    bodyPlaceholder: 'Durumu ayrıntılı olarak açıklayın...',
+    formRequired: 'Konu ve açıklamayı doldurun',
+    empty: 'Henüz talep yok',
+    emptyDesc: 'Sorularınız veya sorunlarınız varsa bir talep oluşturun',
+    adminNotes: 'Ekipten yorumlar',
+    types: {
+      general: 'Genel',
+      api_access: 'API Erişimi',
+      payment_issue: 'Ödeme Sorunu',
+      document: 'Belgeler',
+      technical: 'Teknik Sorun',
+      other: 'Diğer'
+    },
+    status: {
+      new: 'Yeni',
+      in_progress: 'İşlemde',
+      resolved: 'Çözüldü',
+      closed: 'Kapatıldı'
+    }
+  },
+  faq: {
+    title: 'Sık Sorulan Sorular',
+    subtitle: "TAP ile çalışma hakkında sık sorulan sorulara yanıtlar",
+    contacts: 'Bize Ulaşın',
+    noContacts: 'İletişim bilgisi belirtilmemiş',
+    categories: {
+      general: 'Genel',
+      payments: 'Ödemeler',
+      commissions: 'Komisyonlar',
+      tracking: 'Takip',
+      documents: 'Belgeler'
+    }
   }
 }
