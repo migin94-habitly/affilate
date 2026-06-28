@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useLocation } from 'react-router-dom'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
-import { updateProfile, getProfile, submitKYC, acceptOffer } from '@/api/partner'
+import { getProfile, updateProfile } from '@/api/partner'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
@@ -47,6 +46,11 @@ export function ProfilePage() {
     const el = document.querySelector(hash)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [hash, profile])
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfile
+  })
 
   const langOptions = [
     { value: 'ru', label: 'Русский' },
@@ -150,18 +154,12 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* KYC section */}
-      <div id="kyc" className="scroll-mt-4">
-        {profile?.kyc ? (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
-                <IconCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">KYC верифицирован</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Платёжные данные подтверждены</p>
-              </div>
+      {/* KYC status */}
+      {profile?.kyc?.status === 'verified' && (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+              <IconCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
             </div>
           </div>
         ) : (

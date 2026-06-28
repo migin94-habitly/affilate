@@ -120,11 +120,6 @@ export function PromoCodesPage() {
                 </div>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   {promo.uses_count} {t('promoCodes.uses')}
-                  {promo.discount_percent > 0 && (
-                    <span className="ml-2 text-green-600 dark:text-green-400 font-medium">
-                      −{promo.discount_percent}%
-                    </span>
-                  )}
                 </p>
               </div>
               {promo.is_active && (
