@@ -220,4 +220,4 @@ CREATE INDEX idx_audit_created ON audit_logs(created_at);
 
 -- Default super admin (password: Admin123!)
 INSERT INTO admin_users (email, password_hash, role, full_name)
-VALUES ('admin@ticketon.kz', '$2a$10$rqJ7Q8VGoKnJpGZCPQ4qx.8y5oZ4DMiZbFH3Iq5A7w5Qlr.v5mAe', 'super_admin', 'System Admin');
+VALUES ('admin@ticketon.kz', '$2b$10$C/eDydHlKT0KhvH4LIT0Je/wpoi/fgmTRof5nswsW1yOQ8XXD9k8S', 'super_admin', 'System Admin');

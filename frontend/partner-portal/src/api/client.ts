@@ -14,10 +14,14 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+function isAuthRequest(url?: string) {
+  return !!url?.includes('/auth/login') || !!url?.includes('/auth/register')
+}
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !isAuthRequest(err.config?.url)) {
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }

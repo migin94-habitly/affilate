@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
-import { updateProfile } from '@/api/partner'
+import { getProfile, updateProfile } from '@/api/partner'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
@@ -30,6 +30,11 @@ export function ProfilePage() {
     language: partner?.language ?? 'ru'
   })
   const [saved, setSaved] = useState(false)
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfile
+  })
 
   const langOptions = [
     { value: 'ru', label: 'Русский' },
@@ -116,7 +121,7 @@ export function ProfilePage() {
       </div>
 
       {/* KYC status */}
-      {partner?.kyc && (
+      {profile?.kyc?.status === 'verified' && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card p-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
