@@ -11,6 +11,7 @@ import { PayoutsPage } from '@/pages/PayoutsPage'
 import { DocumentsPage } from '@/pages/DocumentsPage'
 import { FraudPage } from '@/pages/FraudPage'
 import { EventsPage } from '@/pages/EventsPage'
+import { NotificationsPage } from '@/pages/NotificationsPage'
 import { FAQPage } from '@/pages/FAQPage'
 
 const qc = new QueryClient({
@@ -41,7 +42,8 @@ export default function App() {
             <Route path="/commissions" element={<ProtectedRoute><AdminLayout><CommissionsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/payouts"     element={<ProtectedRoute><AdminLayout><PayoutsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/documents"   element={<ProtectedRoute><AdminLayout><DocumentsPage /></AdminLayout></ProtectedRoute>} />
-            <Route path="/fraud"       element={<ProtectedRoute><AdminLayout><FraudPage /></AdminLayout></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><AdminLayout><NotificationsPage /></AdminLayout></ProtectedRoute>} />
+            <Route path="/fraud"        element={<ProtectedRoute><AdminLayout><FraudPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/faq"         element={<ProtectedRoute><AdminLayout><FAQPage /></AdminLayout></ProtectedRoute>} />
             <Route path="*"            element={<Navigate to="/dashboard" replace />} />
           </Routes>

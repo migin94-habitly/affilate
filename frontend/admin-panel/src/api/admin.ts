@@ -86,6 +86,13 @@ export const setAdminEventActive = (id: string, is_active: boolean) =>
 export const setAdminEventSpecialRate = (id: string, special_rate: number | null, reason?: string) =>
   api.patch(`/admin/events/${id}/special-rate`, { special_rate, reason }).then(r => r.data)
 
+// Notifications
+export const getAdminNotifications = (params: any) =>
+  api.get('/admin/notifications', { params }).then(r => r.data)
+
+export const sendAdminNotification = (data: { partner_id?: string; type?: string; title: string; body: string }) =>
+  api.post('/admin/notifications/send', data).then(r => r.data)
+
 // FAQ
 export const getFAQ = () =>
   api.get('/admin/faq').then(r => r.data)
