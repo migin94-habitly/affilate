@@ -3,6 +3,7 @@ export default {
     loading: 'Жүктелуде...',
     save: 'Сақтау',
     cancel: 'Болдырмау',
+    close: 'Жабу',
     next: 'Келесі',
     back: 'Артқа',
     submit: 'Жіберу',
@@ -16,8 +17,12 @@ export default {
     dashboard: 'Басты бет',
     events: 'Іс-шаралар',
     links: 'Сілтемелер',
+    promoCodes: 'Промокодтар',
     payouts: 'Төлемдер',
     documents: 'Құжаттар',
+    requests: 'Сұраулар',
+    faq: 'FAQ',
+    notifications: 'Хабарламалар',
     profile: 'Профиль',
     logout: 'Шығу'
   },
@@ -42,23 +47,54 @@ export default {
   onboarding: {
     step1: 'Серіктес түрі',
     step2: 'Байланыс',
-    step3: 'Freedom Pay',
+    step3: 'Банктік деректер',
     step4: 'Оферта',
     title: 'TAP-қа қош келдіңіз',
     subtitle: '4 қарапайым қадаммен тіркелуді аяқтаңыз',
-    freedomPayHint: 'Барлық төлемдер Freedom Pay арқылы теңгемен (KZT) жүргізіледі',
+    freedomPayHint: 'Төлемдер банктік шотыңызға теңгемен (KZT) жүргізіледі',
     offerTitle: 'Серіктестік оферта',
     offerText: 'Мен Ticketon Affiliate Platform серіктестік келісімінің шарттарымен келісемін.',
-    accept: 'Офертаны қабылдау'
+    accept: 'Офертаны қабылдау',
+    checklistTitle: 'Жұмысты бастау',
+    checklistDone: 'орындалды',
+    steps: {
+      account: 'Тіркелгі жасалды',
+      kyc: 'Банктік деректер толтырылды',
+      kycLink: 'Толтыру',
+      offer: 'Оферта қабылданды',
+      offerLink: 'Қабылдау',
+      documents: 'Құжат айналымы басталды',
+      documentsLink: 'Бастау',
+    }
+  },
+  kyc: {
+    title: 'Банктік деректемелер',
+    subtitle: 'Төлем алу үшін банктік деректемелерді енгізіңіз',
+    iin: 'ЖСН / БСН (міндетті емес)',
+    accountHolder: 'Төлем алушы',
+    accountHolderPlaceholder: 'Толық аты-жөні немесе компания атауы',
+    bankName: 'Банк атауы',
+    bankNamePlaceholder: 'Мысалы: Halyk Bank, Kaspi, Freedom Pay...',
+    bankAccount: 'Шот нөмірі / IBAN',
+    bankBic: 'БИК / Swift-код',
+    bankBicPlaceholder: 'HSBKKZKX',
+    freedomPayOptional: 'Freedom Pay пайдаланатын болсаңыз — шот нөмірін көрсетіңіз',
+    accountOptional: '(міндетті емес)',
+    freedomPayPlaceholder: 'Freedom Pay шот нөмірі немесе email',
+    save: 'Деректемелерді сақтау',
+    verified: 'Деректемелер расталды',
+    verifiedDesc: 'Төлем деректері сәтті расталды'
   },
   dashboard: {
     title: 'Басты бет',
+    welcome: 'Сәлем,',
     clicks: 'Кликтер',
     orders: 'Тапсырыстар',
     earned: 'Табыс',
     conversion: 'Конверсия',
     balance: 'Қолжетімді баланс',
     pending: 'Өңделуде',
+    chartTitle: 'Кликтер мен тапсырыстар (30 күн)',
     period: {
       day: 'Бүгін',
       week: 'Апта',
@@ -73,10 +109,16 @@ export default {
     allCities: 'Барлық қалалар',
     allCategories: 'Барлық санаттар',
     getLink: 'Сілтеме алу',
-    noEvents: 'Іс-шаралар табылмады'
+    noEvents: 'Іс-шаралар табылмады',
+    goldTitle: 'Ticketon.kz толық каталогы',
+    goldDesc: 'Gold серіктесі ретінде сіз барлық ticketon.kz іс-шараларына ашық API арқылы қол жеткізе аласыз',
+    goldApiAccess: 'Ticketon ашық API-ге рұқсат белсендірілді — барлық платформа іс-шаралары жарнамалауға қолжетімді',
+    resetFilters: 'Сүзгілерді тазалау',
+    totalEvents: 'іс-шара'
   },
   links: {
     title: 'Сілтеме генераторы',
+    generate: 'Сілтеме жасау',
     generated: 'Сілтемеңіз дайын',
     trackingUrl: 'Бақылау сілтемесі',
     channel: 'Орналастыру арнасы',
@@ -88,11 +130,34 @@ export default {
       web: 'Веб-сайт'
     }
   },
+  promoCodes: {
+    title: 'Промокодтар',
+    description: 'Промокод — Stories мен постттарда сілтемелер жоғалатын жерде атрибуцияның балама тәсілі',
+    create: 'Промокод жасау',
+    code: 'Код',
+    codePlaceholder: 'Мысалы: VASYA2026',
+    eventOptional: 'Іс-шара (міндетті емес)',
+    noEvent: 'Барлық іс-шаралар',
+    uses: 'қолданыс',
+    active: 'Белсенді',
+    inactive: 'Белсенді емес',
+    deactivate: 'Деактивациялау',
+    noCodes: 'Промокодтар жоқ'
+  },
   payouts: {
     title: 'Төлемдер',
     request: 'Төлем сұрату',
-    amount: 'Сома',
+    requestTitle: 'Жаңа төлем өтінімі',
+    submit: 'Өтінімді жіберу',
+    amount: 'Төлем сомасы',
     minThreshold: 'Минималды сома: 5 000 ₸',
+    minError: 'Минималды төлем сомасы — 5 000 ₸',
+    insufficientBalance: 'Баланс жеткіліксіз',
+    availableToWithdraw: 'Шығаруға қолжетімді',
+    paid: 'Төленді',
+    willSendTo: 'Қаражат жіберіледі:',
+    destination: 'Төлем деректемелері',
+    noBankDetails: 'Төлем сұрату үшін профильде банктік деректемелерді толтырыңыз',
     status: {
       requested: 'Сұралды',
       processing: 'Өңделуде',
@@ -100,7 +165,8 @@ export default {
       failed: 'Қате'
     },
     history: 'Төлемдер тарихы',
-    freedomPayOnly: 'Төлемдер тек Freedom Pay арқылы KZT-мен жүргізіледі'
+    emptyTitle: 'Төлемдер жоқ',
+    emptyDesc: 'Минималды сомаға жеткенде төлем сұратыңыз'
   },
   documents: {
     title: 'Құжаттар',
@@ -132,6 +198,59 @@ export default {
     download: 'Жүктеп алу',
     downloadFinal: 'Соңғы құжатты жүктеп алу',
     initiateTitle: 'Құжат айналымын бастау',
-    chooseStatus: 'Құжаттар пакетін қалыптастыру үшін заңдық мәртебеңізді таңдаңыз'
+    chooseStatus: 'Құжаттар пакетін қалыптастыру үшін заңдық мәртебеңізді таңдаңыз',
+    confirmStatus: 'Мәртебені растаңыз:',
+    confirmDesc: 'Мәртебеңізге арналған құжаттар пакеті жасалады.',
+    createPackage: 'Құжаттар пакетін жасау',
+    rejectionReason: 'Бас тарту себебі:',
+    uploadHint: 'Қол қойылған құжатқа сілтеме жүктеңіз (Google Drive, Dropbox немесе басқа бұлт қоймасы)',
+    uploadBtn: 'Жүктеу'
+  },
+  notifications: {
+    title: 'Хабарламалар',
+    markAllRead: 'Барлығын оқылды деп белгілеу',
+    empty: 'Хабарламалар жоқ'
+  },
+  requests: {
+    title: 'Менің сұрауларым',
+    subtitle: 'Қолдауға сұраулар жіберіңіз және олардың мәртебесін қадағалаңыз',
+    new: 'Жаңа сұрау',
+    newTitle: 'Сұрау жасау',
+    type: 'Сұрау түрі',
+    subject: 'Тақырып',
+    subjectPlaceholder: 'Мәселеңізді немесе сұрағыңызды қысқаша сипаттаңыз',
+    body: 'Сипаттама',
+    bodyPlaceholder: 'Жағдайды толығырақ сипаттаңыз...',
+    formRequired: 'Тақырып пен сипаттаманы толтырыңыз',
+    empty: 'Сұраулар жоқ',
+    emptyDesc: 'Сұрақтарыңыз немесе мәселелеріңіз болса, сұрау жасаңыз',
+    adminNotes: 'Команданың пікірлері',
+    types: {
+      general: 'Жалпы',
+      api_access: 'API қолжетімділігі',
+      payment_issue: 'Төлем мәселесі',
+      document: 'Құжаттар',
+      technical: 'Техникалық сұрақ',
+      other: 'Басқа'
+    },
+    status: {
+      new: 'Жаңа',
+      in_progress: 'Жұмыста',
+      resolved: 'Шешілді',
+      closed: 'Жабылды'
+    }
+  },
+  faq: {
+    title: 'Жиі қойылатын сұрақтар',
+    subtitle: 'TAP жұмысы туралы жиі қойылатын сұрақтарға жауаптар',
+    contacts: 'Бізбен байланысу',
+    noContacts: 'Байланыс деректері көрсетілмеген',
+    categories: {
+      general: 'Жалпы',
+      payments: 'Төлемдер',
+      commissions: 'Комиссиялар',
+      tracking: 'Бақылау',
+      documents: 'Құжаттар'
+    }
   }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { getEvents, getEventFilters, generateLink } from '@/api/partner'
+import { useAuthStore } from '@/store/auth'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -111,11 +112,28 @@ function EventCard({ event, onSelect, index }: { event: Event; onSelect: () => v
   )
 }
 
+// ─── Gold tier badge ──────────────────────────────────────────────────────────
+
+function GoldBanner({ t }: { t: (key: string) => string }) {
+  return (
+    <div className="relative overflow-hidden bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl p-4 text-white shadow-card-md">
+      <div className="absolute right-4 top-4 text-5xl opacity-20 select-none">🏆</div>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="px-2 py-0.5 bg-white/20 rounded-lg text-xs font-bold uppercase tracking-wide">Gold API</span>
+      </div>
+      <p className="font-bold text-base">{t('events.goldTitle')}</p>
+      <p className="text-xs opacity-80 mt-0.5">{t('events.goldDesc')}</p>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function EventsPage() {
   const { t } = useTranslation()
   const { toasts, show: showToast, dismiss } = useToast()
+  const partner = useAuthStore(s => s.partner)
+  const isGold = partner?.tier === 'gold'
 
   const [search, setSearch] = useState('')
   const [city, setCity] = useState('')
@@ -179,7 +197,27 @@ export function EventsPage() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('events.title')}</h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('events.title')}</h1>
+        {isGold && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-white text-xs font-bold rounded-xl shadow-sm">
+            🏆 Gold API
+          </span>
+        )}
+      </div>
+
+      {/* Gold tier ticketon.kz events section */}
+      {isGold && (
+        <div className="space-y-3">
+          <GoldBanner t={t} />
+          <div className="flex items-center gap-2 p-3.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl text-sm text-amber-700 dark:text-amber-300">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <span>{t('events.goldApiAccess')}</span>
+          </div>
+        </div>
+      )}
 
       {/* Search + city filter */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

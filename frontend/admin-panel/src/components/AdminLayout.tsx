@@ -24,6 +24,7 @@ const IconMoon      = icon(<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
 const IconMonitor   = icon(<><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></>)
 const IconChevRight = icon(<path d="M9 18l6-6-6-6"/>)
 const IconChevLeft  = icon(<path d="M15 18l-6-6 6-6"/>)
+const IconInbox     = icon(<><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></>)
 
 const nav = [
   { to: '/dashboard',   label: 'Дашборд',        Icon: IconGrid     },
@@ -33,6 +34,7 @@ const nav = [
   { to: '/payouts',     label: 'Выплаты',         Icon: IconCard     },
   { to: '/documents',   label: 'Документы',       Icon: IconFile     },
   { to: '/notifications', label: 'Уведомления',     Icon: IconBell     },
+  { to: '/requests',      label: 'Запросы',         Icon: IconInbox    },
   { to: '/fraud',         label: 'Антифрод',        Icon: IconShield   },
   { to: '/faq',           label: 'FAQ & Контакты',  Icon: IconHelp     },
 ]

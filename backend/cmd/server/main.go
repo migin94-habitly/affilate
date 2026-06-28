@@ -55,6 +55,7 @@ func main() {
 	promoRepo := repository.NewPromoRepo(pool)
 	notifRepo := repository.NewNotificationRepo(pool)
 	faqRepo := repository.NewFAQRepo(pool)
+	requestRepo := repository.NewRequestRepo(pool)
 
 	// Services
 	authSvc := service.NewAuthService(partnerRepo, adminRepo, &cfg.JWT)
@@ -73,6 +74,7 @@ func main() {
 	partnerPromos := partner.NewPromosHandler(promoRepo)
 	partnerNotifs := partner.NewNotificationsHandler(notifRepo)
 	partnerFAQ := partner.NewFAQHandler(faqRepo)
+	partnerRequests := partner.NewRequestsHandler(requestRepo)
 
 	trackHandler := tracking.NewTrackHandler(trackingSvc)
 
@@ -86,6 +88,7 @@ func main() {
 	adminEvents := adminhandler.NewAdminEventsHandler(eventRepo, adminRepo)
 	adminFAQ := adminhandler.NewAdminFAQHandler(faqRepo)
 	adminNotifs := adminhandler.NewAdminNotificationsHandler(notifRepo)
+	adminRequests := adminhandler.NewAdminRequestsHandler(requestRepo, notifRepo)
 
 	// Router
 	r := chi.NewRouter()
@@ -160,6 +163,10 @@ func main() {
 		// FAQ & Contacts (partner reads)
 		r.Get("/api/v1/partner/faq", partnerFAQ.GetFAQ)
 		r.Get("/api/v1/partner/contacts", partnerFAQ.GetContacts)
+
+		// Partner requests (support tickets)
+		r.Get("/api/v1/partner/requests", partnerRequests.List)
+		r.Post("/api/v1/partner/requests", partnerRequests.Create)
 	})
 
 	// Admin auth (public)
@@ -216,6 +223,12 @@ func main() {
 		// Admin notifications
 		r.Get("/api/v1/admin/notifications", adminNotifs.List)
 		r.Post("/api/v1/admin/notifications/send", adminNotifs.Send)
+
+		// Admin partner requests (Kanban)
+		r.Get("/api/v1/admin/requests", adminRequests.List)
+		r.Get("/api/v1/admin/requests/{id}", adminRequests.Get)
+		r.Patch("/api/v1/admin/requests/{id}/status", adminRequests.UpdateStatus)
+		r.Post("/api/v1/admin/requests/{id}/notes", adminRequests.AddNote)
 	})
 
 	srv := &http.Server{

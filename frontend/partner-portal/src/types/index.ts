@@ -22,9 +22,34 @@ export interface PartnerKYC {
   id: string
   partner_id: string
   iin?: string
-  freedom_pay_account: string
+  bank_name?: string
+  bank_account?: string
+  bank_bic?: string
+  account_holder?: string
+  freedom_pay_account?: string
   status: 'pending' | 'verified' | 'rejected'
   verified_at?: string
+}
+
+export interface PartnerRequest {
+  id: string
+  partner_id: string
+  type: string
+  subject: string
+  body: string
+  status: 'new' | 'in_progress' | 'resolved' | 'closed'
+  notes?: RequestNote[]
+  created_at: string
+  updated_at: string
+}
+
+export interface RequestNote {
+  id: string
+  request_id: string
+  admin_id: string
+  admin_name?: string
+  body: string
+  created_at: string
 }
 
 export interface PartnerBalance {

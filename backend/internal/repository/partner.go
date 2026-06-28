@@ -143,10 +143,13 @@ type PartnerFilter struct {
 
 func (r *PartnerRepo) UpsertKYC(ctx context.Context, kyc *domain.PartnerKYC) error {
 	_, err := r.db.Exec(ctx, `
-		INSERT INTO partner_kyc (id, partner_id, iin, freedom_pay_account, status)
-		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (partner_id) DO UPDATE SET iin=$3, freedom_pay_account=$4, status='pending'`,
-		kyc.ID, kyc.PartnerID, kyc.IIN, kyc.FreedomPayAccount, kyc.Status,
+		INSERT INTO partner_kyc (id, partner_id, iin, bank_name, bank_account, bank_bic, account_holder, freedom_pay_account, status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (partner_id) DO UPDATE SET
+		  iin=$3, bank_name=$4, bank_account=$5, bank_bic=$6, account_holder=$7,
+		  freedom_pay_account=$8, status='pending'`,
+		kyc.ID, kyc.PartnerID, kyc.IIN, kyc.BankName, kyc.BankAccount,
+		kyc.BankBIC, kyc.AccountHolder, kyc.FreedomPayAccount, kyc.Status,
 	)
 	return err
 }
@@ -154,9 +157,15 @@ func (r *PartnerRepo) UpsertKYC(ctx context.Context, kyc *domain.PartnerKYC) err
 func (r *PartnerRepo) GetKYC(ctx context.Context, partnerID uuid.UUID) (*domain.PartnerKYC, error) {
 	k := &domain.PartnerKYC{}
 	err := r.db.QueryRow(ctx, `
-		SELECT id, partner_id, iin, freedom_pay_account, status, verified_at, created_at
+		SELECT id, partner_id, iin,
+		  COALESCE(bank_name,''), COALESCE(bank_account,''), COALESCE(bank_bic,''),
+		  COALESCE(account_holder,''), COALESCE(freedom_pay_account,''),
+		  status, verified_at, created_at
 		FROM partner_kyc WHERE partner_id=$1`, partnerID).
-		Scan(&k.ID, &k.PartnerID, &k.IIN, &k.FreedomPayAccount, &k.Status, &k.VerifiedAt, &k.CreatedAt)
+		Scan(&k.ID, &k.PartnerID, &k.IIN,
+			&k.BankName, &k.BankAccount, &k.BankBIC,
+			&k.AccountHolder, &k.FreedomPayAccount,
+			&k.Status, &k.VerifiedAt, &k.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, domain.ErrNotFound
 	}

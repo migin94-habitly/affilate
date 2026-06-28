@@ -20,6 +20,7 @@ export default {
     promoCodes: 'Промокоды',
     payouts: 'Выплаты',
     documents: 'Документы',
+    requests: 'Запросы',
     faq: 'FAQ',
     notifications: 'Уведомления',
     profile: 'Профиль',
@@ -46,11 +47,11 @@ export default {
   onboarding: {
     step1: 'Тип партнёра',
     step2: 'Контакты',
-    step3: 'Freedom Pay',
+    step3: 'Банковские данные',
     step4: 'Оферта',
     title: 'Добро пожаловать в TAP',
     subtitle: 'Завершите регистрацию за 4 простых шага',
-    freedomPayHint: 'Все выплаты производятся через Freedom Pay в тенге (KZT)',
+    freedomPayHint: 'Выплаты производятся на указанные банковские реквизиты в тенге (KZT)',
     offerTitle: 'Партнёрская оферта',
     offerText: 'Я соглашаюсь с условиями партнёрского соглашения Ticketon Affiliate Platform, включая требования к размещению #партнёрский материал, запрет на накрутку и self-referral.',
     accept: 'Принять оферту',
@@ -58,13 +59,31 @@ export default {
     checklistDone: 'выполнено',
     steps: {
       account: 'Аккаунт создан',
-      kyc: 'Данные KYC заполнены (ИИН + Freedom Pay)',
+      kyc: 'Банковские данные заполнены',
       kycLink: 'Заполнить',
       offer: 'Оферта принята',
       offerLink: 'Принять',
       documents: 'Документооборот инициирован',
       documentsLink: 'Начать',
     }
+  },
+  kyc: {
+    title: 'Банковские реквизиты',
+    subtitle: 'Укажите реквизиты для получения выплат',
+    iin: 'ИИН / БИН (необязательно)',
+    accountHolder: 'Получатель платежа',
+    accountHolderPlaceholder: 'Полное имя или название компании',
+    bankName: 'Название банка',
+    bankNamePlaceholder: 'Например: Halyk Bank, Kaspi, Freedom Pay...',
+    bankAccount: 'Номер счёта / IBAN',
+    bankBic: 'БИК / Swift-код',
+    bankBicPlaceholder: 'HSBKKZKX',
+    freedomPayOptional: 'Если вы используете Freedom Pay — укажите номер аккаунта',
+    accountOptional: '(необязательно)',
+    freedomPayPlaceholder: 'Номер аккаунта или email Freedom Pay',
+    save: 'Сохранить реквизиты',
+    verified: 'Реквизиты подтверждены',
+    verifiedDesc: 'Платёжные данные успешно верифицированы'
   },
   dashboard: {
     title: 'Дашборд',
@@ -90,7 +109,12 @@ export default {
     allCities: 'Все города',
     allCategories: 'Все категории',
     getLink: 'Получить ссылку',
-    noEvents: 'События не найдены'
+    noEvents: 'События не найдены',
+    goldTitle: 'Полный каталог Ticketon.kz',
+    goldDesc: 'Как партнёр Gold-уровня вы видите все события с ticketon.kz через открытый API',
+    goldApiAccess: 'У вас активирован доступ к открытому API Ticketon — все события платформы доступны для продвижения',
+    resetFilters: 'Сбросить фильтры',
+    totalEvents: 'событий'
   },
   links: {
     title: 'Генератор ссылок',
@@ -123,8 +147,17 @@ export default {
   payouts: {
     title: 'Выплаты',
     request: 'Запросить выплату',
-    amount: 'Сумма',
+    requestTitle: 'Новая заявка на выплату',
+    submit: 'Отправить заявку',
+    amount: 'Сумма выплаты',
     minThreshold: 'Минимальная сумма: 5 000 ₸',
+    minError: 'Минимальная сумма выплаты — 5 000 ₸',
+    insufficientBalance: 'Недостаточно средств на балансе',
+    availableToWithdraw: 'Доступно к выводу',
+    paid: 'Выплачено',
+    willSendTo: 'Средства будут переведены на:',
+    destination: 'Реквизиты выплаты',
+    noBankDetails: 'Заполните банковские реквизиты в профиле, чтобы запросить выплату',
     status: {
       requested: 'Запрошено',
       processing: 'В обработке',
@@ -132,7 +165,8 @@ export default {
       failed: 'Ошибка'
     },
     history: 'История выплат',
-    freedomPayOnly: 'Выплаты только через Freedom Pay в KZT'
+    emptyTitle: 'Выплат пока нет',
+    emptyDesc: 'Запросите выплату, когда накопите минимальную сумму'
   },
   documents: {
     title: 'Документы',
@@ -176,6 +210,35 @@ export default {
     title: 'Уведомления',
     markAllRead: 'Прочитать все',
     empty: 'У вас пока нет уведомлений'
+  },
+  requests: {
+    title: 'Мои запросы',
+    subtitle: 'Отправляйте запросы в поддержку и отслеживайте их статус',
+    new: 'Новый запрос',
+    newTitle: 'Создать запрос',
+    type: 'Тип запроса',
+    subject: 'Тема',
+    subjectPlaceholder: 'Кратко опишите вашу проблему или вопрос',
+    body: 'Описание',
+    bodyPlaceholder: 'Подробно опишите ситуацию...',
+    formRequired: 'Заполните тему и описание',
+    empty: 'Запросов пока нет',
+    emptyDesc: 'Создайте запрос, если у вас есть вопросы или проблемы',
+    adminNotes: 'Комментарии от команды',
+    types: {
+      general: 'Общий',
+      api_access: 'Доступ к API',
+      payment_issue: 'Проблема с выплатой',
+      document: 'Документооборот',
+      technical: 'Технический вопрос',
+      other: 'Другое'
+    },
+    status: {
+      new: 'Новый',
+      in_progress: 'В работе',
+      resolved: 'Решён',
+      closed: 'Закрыт'
+    }
   },
   faq: {
     title: 'Часто задаваемые вопросы',

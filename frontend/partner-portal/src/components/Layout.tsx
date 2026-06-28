@@ -17,7 +17,8 @@ const navItems = [
   { to: '/promo-codes', labelKey: 'nav.promoCodes',   Icon: IconTag        },
   { to: '/payouts',     labelKey: 'nav.payouts',      Icon: IconCreditCard },
   { to: '/documents',   labelKey: 'nav.documents',    Icon: IconFileText   },
-  { to: '/faq',         labelKey: 'nav.faq',          Icon: IconHelpCircle },
+  { to: '/requests',    labelKey: 'nav.requests',     Icon: IconHelpCircle },
+  { to: '/faq',         labelKey: 'nav.faq',          Icon: IconFileText   },
   { to: '/profile',     labelKey: 'nav.profile',      Icon: IconUser       },
 ]
 
@@ -25,8 +26,8 @@ const bottomNavItems = [
   navItems[0], // dashboard
   navItems[1], // events
   navItems[3], // payouts
-  navItems[5], // faq
-  navItems[6], // profile
+  navItems[5], // requests
+  navItems[7], // profile
 ]
 
 const languages = [

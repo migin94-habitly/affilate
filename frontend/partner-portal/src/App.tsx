@@ -13,6 +13,7 @@ import { ProfilePage } from '@/pages/ProfilePage'
 import { PromoCodesPage } from '@/pages/PromoCodesPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
 import { FAQPage } from '@/pages/FAQPage'
+import { RequestsPage } from '@/pages/RequestsPage'
 import '@/i18n'
 
 const qc = new QueryClient({
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/profile"      element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
             <Route path="/faq"          element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
+            <Route path="/requests"     element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
             <Route path="*"             element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>

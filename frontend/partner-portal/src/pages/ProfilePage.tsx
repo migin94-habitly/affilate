@@ -33,7 +33,14 @@ export function ProfilePage() {
     language: partner?.language ?? 'ru'
   })
   const [saved, setSaved] = useState(false)
-  const [kycForm, setKycForm] = useState({ iin: '', freedom_pay_account: '' })
+  const [kycForm, setKycForm] = useState({
+    iin: '',
+    bank_name: '',
+    bank_account: '',
+    bank_bic: '',
+    account_holder: '',
+    freedom_pay_account: ''
+  })
   const [kycError, setKycError] = useState('')
   const [offerError, setOfferError] = useState('')
 
@@ -68,7 +75,14 @@ export function ProfilePage() {
   })
 
   const kycMutation = useMutation({
-    mutationFn: () => submitKYC({ iin: kycForm.iin || undefined, freedom_pay_account: kycForm.freedom_pay_account }),
+    mutationFn: () => submitKYC({
+      iin: kycForm.iin || undefined,
+      bank_name: kycForm.bank_name || undefined,
+      bank_account: kycForm.bank_account || undefined,
+      bank_bic: kycForm.bank_bic || undefined,
+      account_holder: kycForm.account_holder || undefined,
+      freedom_pay_account: kycForm.freedom_pay_account || undefined,
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['profile'] })
       setKycError('')
@@ -150,49 +164,108 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* KYC section */}
+      {/* KYC / Bank details section */}
       <div id="kyc" className="scroll-mt-4">
         {profile?.kyc?.status === 'verified' ? (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card p-4 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
                 <IconCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">KYC верифицирован</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">Платёжные данные подтверждены</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('kyc.verified')}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{t('kyc.verifiedDesc')}</p>
               </div>
             </div>
+            {profile.kyc.bank_name && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-sm">
+                {profile.kyc.bank_name && (
+                  <div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('kyc.bankName')}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 mt-0.5">{profile.kyc.bank_name}</p>
+                  </div>
+                )}
+                {profile.kyc.bank_account && (
+                  <div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('kyc.bankAccount')}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 mt-0.5 font-mono">{profile.kyc.bank_account}</p>
+                  </div>
+                )}
+                {profile.kyc.account_holder && (
+                  <div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('kyc.accountHolder')}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 mt-0.5">{profile.kyc.account_holder}</p>
+                  </div>
+                )}
+                {profile.kyc.bank_bic && (
+                  <div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('kyc.bankBic')}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 mt-0.5 font-mono">{profile.kyc.bank_bic}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-brand-100 dark:border-brand-500/20 shadow-card p-5 space-y-4">
             <div>
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Данные KYC</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Укажите ИИН и аккаунт Freedom Pay для получения выплат</p>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t('kyc.title')}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('kyc.subtitle')}</p>
             </div>
             {kycError && (
               <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl text-sm text-red-600 dark:text-red-400">
                 {kycError}
               </div>
             )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label={t('kyc.accountHolder')}
+                value={kycForm.account_holder}
+                onChange={e => setKycForm(f => ({ ...f, account_holder: e.target.value }))}
+                placeholder={t('kyc.accountHolderPlaceholder')}
+              />
+              <Input
+                label={t('kyc.iin')}
+                value={kycForm.iin}
+                onChange={e => setKycForm(f => ({ ...f, iin: e.target.value }))}
+                placeholder="000000000000"
+              />
+            </div>
             <Input
-              label="ИИН (необязательно)"
-              value={kycForm.iin}
-              onChange={e => setKycForm(f => ({ ...f, iin: e.target.value }))}
-              placeholder="Введите ИИН"
+              label={t('kyc.bankName')}
+              value={kycForm.bank_name}
+              onChange={e => setKycForm(f => ({ ...f, bank_name: e.target.value }))}
+              placeholder={t('kyc.bankNamePlaceholder')}
             />
-            <Input
-              label="Аккаунт Freedom Pay"
-              value={kycForm.freedom_pay_account}
-              onChange={e => setKycForm(f => ({ ...f, freedom_pay_account: e.target.value }))}
-              placeholder="Номер счёта или email"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label={t('kyc.bankAccount')}
+                value={kycForm.bank_account}
+                onChange={e => setKycForm(f => ({ ...f, bank_account: e.target.value }))}
+                placeholder="KZ00 0000 0000 0000 0000"
+              />
+              <Input
+                label={t('kyc.bankBic')}
+                value={kycForm.bank_bic}
+                onChange={e => setKycForm(f => ({ ...f, bank_bic: e.target.value }))}
+                placeholder={t('kyc.bankBicPlaceholder')}
+              />
+            </div>
+            <div className="pt-1 border-t border-gray-100 dark:border-gray-800">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('kyc.freedomPayOptional')}</p>
+              <Input
+                label={`Freedom Pay ${t('kyc.accountOptional')}`}
+                value={kycForm.freedom_pay_account}
+                onChange={e => setKycForm(f => ({ ...f, freedom_pay_account: e.target.value }))}
+                placeholder={t('kyc.freedomPayPlaceholder')}
+              />
+            </div>
             <Button
               loading={kycMutation.isPending}
-              disabled={!kycForm.freedom_pay_account}
+              disabled={!kycForm.bank_account && !kycForm.freedom_pay_account}
               onClick={() => kycMutation.mutate()}
             >
-              Сохранить данные KYC
+              {t('kyc.save')}
             </Button>
           </div>
         )}

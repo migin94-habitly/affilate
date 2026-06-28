@@ -80,14 +80,18 @@ func (h *ProfileHandler) SubmitKYC(w http.ResponseWriter, r *http.Request) {
 	id := middleware.GetPartnerID(r.Context())
 	var input struct {
 		IIN               string `json:"iin"`
+		BankName          string `json:"bank_name"`
+		BankAccount       string `json:"bank_account"`
+		BankBIC           string `json:"bank_bic"`
+		AccountHolder     string `json:"account_holder"`
 		FreedomPayAccount string `json:"freedom_pay_account"`
 	}
 	if err := handler.ParseJSON(r, &input); err != nil {
 		handler.JSON(w, http.StatusBadRequest, map[string]string{"error": "invalid body"})
 		return
 	}
-	if input.FreedomPayAccount == "" {
-		handler.JSON(w, http.StatusBadRequest, map[string]string{"error": "freedom_pay_account is required"})
+	if input.BankAccount == "" && input.FreedomPayAccount == "" {
+		handler.JSON(w, http.StatusBadRequest, map[string]string{"error": "bank_account is required"})
 		return
 	}
 
@@ -95,6 +99,10 @@ func (h *ProfileHandler) SubmitKYC(w http.ResponseWriter, r *http.Request) {
 		ID:                uuid.New(),
 		PartnerID:         id,
 		IIN:               input.IIN,
+		BankName:          input.BankName,
+		BankAccount:       input.BankAccount,
+		BankBIC:           input.BankBIC,
+		AccountHolder:     input.AccountHolder,
 		FreedomPayAccount: input.FreedomPayAccount,
 		Status:            "pending",
 	}
