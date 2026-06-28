@@ -1,7 +1,74 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getAdminEvents, upsertAdminEvent, setAdminEventActive, setAdminEventSpecialRate } from '@/api/admin'
+import { getAdminEvents, upsertAdminEvent, setAdminEventActive, setAdminEventSpecialRate, getAdminEventFilters } from '@/api/admin'
 import { Btn, Badge, Card, Table, TD, Stat } from '@/components/ui'
+
+// ─── Combobox ─────────────────────────────────────────────────────────────────
+
+function Combobox({
+  value,
+  onChange,
+  options,
+  placeholder,
+  className = '',
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+  placeholder?: string
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState(value)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setQuery(value) }, [value])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const filtered = options.filter(o => o.toLowerCase().includes(query.toLowerCase()))
+
+  const base = 'w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500'
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <input
+        className={base}
+        value={query}
+        placeholder={placeholder}
+        onChange={e => { setQuery(e.target.value); onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto">
+          {query !== '' && (
+            <button
+              className="w-full text-left px-3 py-2 text-xs text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
+              onMouseDown={() => { onChange(''); setQuery(''); setOpen(false) }}
+            >
+              Очистить
+            </button>
+          )}
+          {filtered.map(opt => (
+            <button
+              key={opt}
+              className="w-full text-left px-3 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-700 dark:hover:text-brand-400 transition-colors"
+              onMouseDown={() => { onChange(opt); setQuery(opt); setOpen(false) }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface AdminEvent {
   id: string
@@ -58,11 +125,15 @@ function EventForm({
   onSave,
   onCancel,
   loading,
+  cities = [],
+  categories = [],
 }: {
   initial?: Partial<AdminEvent>
   onSave: (data: any) => void
   onCancel: () => void
   loading: boolean
+  cities?: string[]
+  categories?: string[]
 }) {
   const [form, setForm] = useState<EventFormData>({
     base_url:     initial?.base_url  ?? '',
@@ -159,19 +230,19 @@ function EventForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={lbl}>Город</label>
-          <input
-            className={inp()}
+          <Combobox
             value={form.city}
-            onChange={e => f('city', e.target.value)}
+            onChange={v => f('city', v)}
+            options={cities}
             placeholder="Алматы"
           />
         </div>
         <div>
           <label className={lbl}>Категория</label>
-          <input
-            className={inp()}
+          <Combobox
             value={form.category}
-            onChange={e => f('category', e.target.value)}
+            onChange={v => f('category', v)}
+            options={categories}
             placeholder="Концерт"
           />
         </div>
@@ -396,6 +467,14 @@ export function EventsPage() {
   const [showImport, setShowImport] = useState(false)
   const [importResult, setImportResult] = useState<string | null>(null)
 
+  const { data: filters } = useQuery({
+    queryKey: ['admin-event-filters'],
+    queryFn: getAdminEventFilters,
+    staleTime: 5 * 60_000,
+  })
+  const availCities = filters?.cities ?? []
+  const availCats = filters?.categories ?? []
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-events', search, cityFilter, catFilter, page],
     queryFn: () => getAdminEvents({ search, city: cityFilter, category: catFilter, page, per_page: 20 }),
@@ -436,8 +515,6 @@ export function EventsPage() {
     setImportResult(`Импортировано ${ok} из ${rows.length} событий`)
     setTimeout(() => setImportResult(null), 5000)
   }
-
-  const inp = 'px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500'
 
   const editingEvent = editingId && editingId !== 'new' ? events.find(e => e.id === editingId) : undefined
 
@@ -481,18 +558,34 @@ export function EventsPage() {
             onSave={data => upsertMut.mutate(data)}
             onCancel={() => setEditingId(null)}
             loading={upsertMut.isPending}
+            cities={availCities}
+            categories={availCats}
           />
         </Card>
       )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
-        <input className={inp} placeholder="Поиск по названию..." value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1) }} />
-        <input className={inp} placeholder="Город" value={cityFilter}
-          onChange={e => { setCityFilter(e.target.value); setPage(1) }} />
-        <input className={inp} placeholder="Категория" value={catFilter}
-          onChange={e => { setCatFilter(e.target.value); setPage(1) }} />
+        <input
+          className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500"
+          placeholder="Поиск по названию..."
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
+        />
+        <Combobox
+          value={cityFilter}
+          onChange={v => { setCityFilter(v); setPage(1) }}
+          options={availCities}
+          placeholder="Город"
+          className="w-40"
+        />
+        <Combobox
+          value={catFilter}
+          onChange={v => { setCatFilter(v); setPage(1) }}
+          options={availCats}
+          placeholder="Категория"
+          className="w-44"
+        />
         {(search || cityFilter || catFilter) && (
           <Btn size="sm" variant="ghost" onClick={() => { setSearch(''); setCityFilter(''); setCatFilter(''); setPage(1) }}>
             Сбросить
@@ -527,6 +620,8 @@ export function EventsPage() {
                       onSave={data => upsertMut.mutate(data)}
                       onCancel={() => setEditingId(null)}
                       loading={upsertMut.isPending}
+                      cities={availCities}
+                      categories={availCats}
                     />
                   </td>
                 ) : (

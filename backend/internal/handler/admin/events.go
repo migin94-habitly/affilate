@@ -47,6 +47,10 @@ func (h *AdminEventsHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if events == nil {
+		events = []*domain.Event{}
+	}
+
 	totalPages := int(total) / perPage
 	if int(total)%perPage != 0 {
 		totalPages++
@@ -160,6 +164,21 @@ func (h *AdminEventsHandler) SetSpecialRate(w http.ResponseWriter, r *http.Reque
 	_ = h.adminRepo.LogAudit(context.Background(), "admin", adminID, "event_special_rate_set", "event", &id)
 
 	handler.JSON(w, http.StatusOK, map[string]bool{"updated": true})
+}
+
+func (h *AdminEventsHandler) GetFilters(w http.ResponseWriter, r *http.Request) {
+	cities, _ := h.eventRepo.GetAllCities(r.Context())
+	cats, _ := h.eventRepo.GetAllCategories(r.Context())
+	if cities == nil {
+		cities = []string{}
+	}
+	if cats == nil {
+		cats = []string{}
+	}
+	handler.JSON(w, http.StatusOK, map[string]interface{}{
+		"cities":     cities,
+		"categories": cats,
+	})
 }
 
 func (h *AdminEventsHandler) SetActive(w http.ResponseWriter, r *http.Request) {

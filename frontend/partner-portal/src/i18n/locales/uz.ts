@@ -16,6 +16,7 @@ export default {
   nav: {
     dashboard: 'Boshqaruv paneli',
     events: 'Tadbirlar',
+    tariffs: 'Tariflar',
     links: 'Havolalar',
     promoCodes: 'Promokodlar',
     payouts: "To'lovlar",

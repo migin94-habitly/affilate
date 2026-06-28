@@ -205,6 +205,7 @@ func main() {
 		r.Get("/api/v1/admin/fraud/signals", adminFraud.GetSignals)
 
 		r.Get("/api/v1/admin/events", adminEvents.List)
+		r.Get("/api/v1/admin/events/filters", adminEvents.GetFilters)
 		r.Post("/api/v1/admin/events", adminEvents.Upsert)
 		r.Patch("/api/v1/admin/events/{id}/special-rate", adminEvents.SetSpecialRate)
 		r.Patch("/api/v1/admin/events/{id}/active", adminEvents.SetActive)
@@ -226,6 +227,7 @@ func main() {
 
 		// Admin partner requests (Kanban)
 		r.Get("/api/v1/admin/requests", adminRequests.List)
+		r.Get("/api/v1/admin/requests/stats", adminRequests.Stats)
 		r.Get("/api/v1/admin/requests/{id}", adminRequests.Get)
 		r.Patch("/api/v1/admin/requests/{id}/status", adminRequests.UpdateStatus)
 		r.Post("/api/v1/admin/requests/{id}/notes", adminRequests.AddNote)

@@ -16,6 +16,7 @@ export default {
   nav: {
     dashboard: 'Gösterge Paneli',
     events: 'Etkinlikler',
+    tariffs: 'Tarifeler',
     links: 'Bağlantılar',
     promoCodes: 'Promosyon Kodları',
     payouts: 'Ödemeler',

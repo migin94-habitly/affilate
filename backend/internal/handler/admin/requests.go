@@ -21,6 +21,15 @@ func NewAdminRequestsHandler(rr *repository.RequestRepo, nr *repository.Notifica
 	return &AdminRequestsHandler{requestRepo: rr, notifRepo: nr}
 }
 
+func (h *AdminRequestsHandler) Stats(w http.ResponseWriter, r *http.Request) {
+	counts, err := h.requestRepo.CountByStatus(r.Context())
+	if err != nil {
+		handler.Error(w, err)
+		return
+	}
+	handler.JSON(w, http.StatusOK, counts)
+}
+
 func (h *AdminRequestsHandler) List(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))

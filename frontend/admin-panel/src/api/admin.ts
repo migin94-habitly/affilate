@@ -119,6 +119,10 @@ export const updateContact = (id: string, data: any) =>
 export const deleteContact = (id: string) =>
   api.delete(`/admin/contacts/${id}`).then(r => r.data)
 
+// Events filters
+export const getAdminEventFilters = () =>
+  api.get<{ cities: string[]; categories: string[] }>('/admin/events/filters').then(r => r.data)
+
 // Partner Requests
 export const getRequests = (params?: { status?: string; page?: number; per_page?: number }) =>
   api.get('/admin/requests', { params }).then(r => r.data)
@@ -131,3 +135,6 @@ export const updateRequestStatus = (id: string, status: string) =>
 
 export const addRequestNote = (id: string, body: string) =>
   api.post(`/admin/requests/${id}/notes`, { body }).then(r => r.data)
+
+export const getAdminRequestStats = () =>
+  api.get<Record<string, number>>('/admin/requests/stats').then(r => r.data)

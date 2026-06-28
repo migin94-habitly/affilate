@@ -8,26 +8,27 @@ import { getUnreadCount } from '@/api/partner'
 import {
   IconDashboard, IconTicket, IconTag, IconCreditCard, IconFileText,
   IconHelpCircle, IconUser, IconBell, IconLogOut, IconMenu, IconX,
-  IconSun, IconMoon, IconMonitor, IconChevronDown
+  IconSun, IconMoon, IconMonitor, IconChevronDown, IconTrendingUp
 } from './ui/Icons'
 
 const navItems = [
-  { to: '/dashboard',   labelKey: 'nav.dashboard',   Icon: IconDashboard },
-  { to: '/events',      labelKey: 'nav.events',       Icon: IconTicket     },
-  { to: '/promo-codes', labelKey: 'nav.promoCodes',   Icon: IconTag        },
-  { to: '/payouts',     labelKey: 'nav.payouts',      Icon: IconCreditCard },
-  { to: '/documents',   labelKey: 'nav.documents',    Icon: IconFileText   },
-  { to: '/requests',    labelKey: 'nav.requests',     Icon: IconHelpCircle },
-  { to: '/faq',         labelKey: 'nav.faq',          Icon: IconFileText   },
-  { to: '/profile',     labelKey: 'nav.profile',      Icon: IconUser       },
+  { to: '/dashboard',   labelKey: 'nav.dashboard',   Icon: IconDashboard   },
+  { to: '/events',      labelKey: 'nav.events',       Icon: IconTicket      },
+  { to: '/tariffs',     labelKey: 'nav.tariffs',      Icon: IconTrendingUp  },
+  { to: '/promo-codes', labelKey: 'nav.promoCodes',   Icon: IconTag         },
+  { to: '/payouts',     labelKey: 'nav.payouts',      Icon: IconCreditCard  },
+  { to: '/documents',   labelKey: 'nav.documents',    Icon: IconFileText    },
+  { to: '/requests',    labelKey: 'nav.requests',     Icon: IconHelpCircle  },
+  { to: '/faq',         labelKey: 'nav.faq',          Icon: IconFileText    },
+  { to: '/profile',     labelKey: 'nav.profile',      Icon: IconUser        },
 ]
 
 const bottomNavItems = [
   navItems[0], // dashboard
   navItems[1], // events
-  navItems[3], // payouts
-  navItems[5], // requests
-  navItems[7], // profile
+  navItems[4], // payouts
+  navItems[6], // requests
+  navItems[8], // profile
 ]
 
 const languages = [

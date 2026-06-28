@@ -106,7 +106,23 @@ function EventCard({ event, onSelect, index }: { event: Event; onSelect: () => v
         {event.min_price > 0 && (
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">от {event.min_price.toLocaleString()} ₸</p>
         )}
-        <Button full size="sm" className="mt-3" onClick={onSelect}>Получить ссылку</Button>
+        <div className="flex gap-2 mt-3">
+          <Button full size="sm" onClick={onSelect}>Получить ссылку</Button>
+          {event.base_url && (
+            <a
+              href={event.base_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 inline-flex items-center justify-center px-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
+              title="Открыть событие"
+              onClick={e => e.stopPropagation()}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   )

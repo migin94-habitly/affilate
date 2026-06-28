@@ -66,7 +66,8 @@ func (r *RequestRepo) ListByPartner(ctx context.Context, partnerID uuid.UUID, pa
 		return nil, 0, err
 	}
 	defer rows.Close()
-	return scanRequests(rows)
+	items, _, err := scanRequests(rows)
+	return items, total, err
 }
 
 // ListAll returns all requests for admin view with optional status filter.
@@ -98,7 +99,28 @@ func (r *RequestRepo) ListAll(ctx context.Context, status string, page, perPage 
 		return nil, 0, err
 	}
 	defer rows.Close()
-	return scanRequests(rows)
+	items, _, err := scanRequests(rows)
+	return items, total, err
+}
+
+// CountByStatus returns request counts grouped by status (for admin analytics).
+func (r *RequestRepo) CountByStatus(ctx context.Context) (map[string]int64, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT status, COUNT(*) FROM partner_requests GROUP BY status`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	result := map[string]int64{}
+	for rows.Next() {
+		var status string
+		var count int64
+		if err := rows.Scan(&status, &count); err != nil {
+			return nil, err
+		}
+		result[status] = count
+	}
+	return result, nil
 }
 
 func (r *RequestRepo) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {

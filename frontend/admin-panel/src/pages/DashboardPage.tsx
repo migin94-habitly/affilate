@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getAnalytics } from '@/api/admin'
+import { getAnalytics, getAdminRequestStats } from '@/api/admin'
 import { Stat, Card } from '@/components/ui'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
@@ -10,6 +10,12 @@ export function DashboardPage() {
   const { data: analytics } = useQuery({
     queryKey: ['analytics', period],
     queryFn: () => getAnalytics(period)
+  })
+
+  const { data: requestStats } = useQuery({
+    queryKey: ['admin-request-stats'],
+    queryFn: getAdminRequestStats,
+    refetchInterval: 60_000,
   })
 
   const fmt = (n: number) => n?.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) ?? '0'
@@ -34,6 +40,17 @@ export function DashboardPage() {
         <Stat label="Доля в GMV" value={`${(analytics?.affiliate_pct ?? 0).toFixed(1)}%`} color="text-blue-600" />
         <Stat label="Активные партнёры" value={fmt(analytics?.active_partners ?? 0)} />
         <Stat label="Affiliate CAC" value={`${fmt(analytics?.affiliate_cac ?? 0)} ₸`} color="text-orange-600" />
+      </div>
+
+      {/* Incoming requests */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Входящие запросы</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Stat label="Новые" value={requestStats?.new ?? 0} color="text-yellow-600" />
+          <Stat label="В работе" value={requestStats?.in_progress ?? 0} color="text-blue-600" />
+          <Stat label="Решены" value={requestStats?.resolved ?? 0} color="text-green-600" />
+          <Stat label="Закрыты" value={requestStats?.closed ?? 0} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
