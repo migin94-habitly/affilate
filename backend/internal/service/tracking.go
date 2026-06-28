@@ -102,29 +102,29 @@ func (s *TrackingService) GenerateLink(ctx context.Context, input GenerateLinkIn
 	}, nil
 }
 
-func (s *TrackingService) RecordClick(ctx context.Context, clickID, ip, userAgent, referrer string) (string, error) {
-	click, err := s.trackingRepo.GetClickByID(ctx, clickID)
-	if err != nil {
-		return s.cfg.BaseRedirectURL, nil
+func (s *TrackingService) RecordClick(ctx context.Context, clickID, ip, userAgent, referrer string) (destURL string, cookieExpires time.Time, err error) {
+	click, lookupErr := s.trackingRepo.GetClickByID(ctx, clickID)
+	if lookupErr != nil {
+		return s.cfg.BaseRedirectURL, time.Now().AddDate(0, 0, s.cfg.CookieWindowDays), nil
 	}
 
-	destURL := s.cfg.BaseRedirectURL
+	destURL = s.cfg.BaseRedirectURL
 	if click.EventID != nil {
-		event, err := s.eventRepo.GetByID(ctx, *click.EventID)
-		if err == nil {
+		event, evErr := s.eventRepo.GetByID(ctx, *click.EventID)
+		if evErr == nil {
 			destURL = event.BaseURL
 		}
 	}
 
 	// Append click_id as fallback for cookieless tracking
-	if parsed, err := url.Parse(destURL); err == nil {
+	if parsed, parseErr := url.Parse(destURL); parseErr == nil {
 		q := parsed.Query()
 		q.Set("tap_click", clickID)
 		parsed.RawQuery = q.Encode()
 		destURL = parsed.String()
 	}
 
-	return destURL, nil
+	return destURL, click.CookieExpires, nil
 }
 
 // OrderWebhookInput represents the webhook payload from Ticketon core

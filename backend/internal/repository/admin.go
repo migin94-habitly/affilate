@@ -65,7 +65,7 @@ func (r *AdminRepo) GetAnalytics(ctx context.Context, period string) (*domain.Ch
 
 	r.db.QueryRow(ctx, `
 		SELECT COALESCE(SUM(total_amount),0) FROM commissions
-		WHERE created_at >= NOW() - ($1::TEXT::INTERVAL)`, interval).
+		WHERE status IN ('approved','paid') AND created_at >= NOW() - ($1::TEXT::INTERVAL)`, interval).
 		Scan(&a.TotalCommissions)
 
 	r.db.QueryRow(ctx, `

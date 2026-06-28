@@ -70,8 +70,9 @@ func (s *PayoutService) GetPartnerPayouts(ctx context.Context, partnerID uuid.UU
 }
 
 func (s *PayoutService) GetPartnerBalance(ctx context.Context, partnerID uuid.UUID) (*domain.PartnerBalance, error) {
-	// Flush pending commissions first
-	s.commRepo.FlushToBalance(ctx, partnerID)
+	if err := s.commRepo.FlushToBalance(ctx, partnerID); err != nil {
+		return nil, err
+	}
 	return s.partnerRepo.GetBalance(ctx, partnerID)
 }
 

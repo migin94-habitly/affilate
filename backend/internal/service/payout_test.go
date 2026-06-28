@@ -157,3 +157,42 @@ func TestRequestPayout_NoKYC(t *testing.T) {
 		t.Errorf("expected ErrKYCNotVerified for missing KYC, got %v", err)
 	}
 }
+
+func TestGetPartnerBalance_FlushError(t *testing.T) {
+	partnerID := uuid.New()
+	partnerRepo := testutil.NewMockPartnerRepo()
+	commRepo := testutil.NewMockCommissionRepo()
+	payoutRepo := &testutil.MockPayoutRepo{}
+
+	commRepo.FlushErr = domain.ErrNotFound // simulate flush failure
+
+	svc := service.NewPayoutService(payoutRepo, partnerRepo, commRepo, newPayoutCfg())
+
+	_, err := svc.GetPartnerBalance(context.Background(), partnerID)
+	if err == nil {
+		t.Error("GetPartnerBalance should propagate FlushToBalance error")
+	}
+}
+
+func TestGetPartnerBalance_Success(t *testing.T) {
+	partnerID := uuid.New()
+	partnerRepo := testutil.NewMockPartnerRepo()
+	commRepo := testutil.NewMockCommissionRepo()
+	payoutRepo := &testutil.MockPayoutRepo{}
+
+	partnerRepo.Balances[partnerID] = &domain.PartnerBalance{
+		PartnerID:       partnerID,
+		AvailableAmount: 7500.0,
+		PendingAmount:   500.0,
+	}
+
+	svc := service.NewPayoutService(payoutRepo, partnerRepo, commRepo, newPayoutCfg())
+
+	balance, err := svc.GetPartnerBalance(context.Background(), partnerID)
+	if err != nil {
+		t.Fatalf("GetPartnerBalance error: %v", err)
+	}
+	if balance.AvailableAmount != 7500.0 {
+		t.Errorf("AvailableAmount = %.2f, want 7500", balance.AvailableAmount)
+	}
+}
