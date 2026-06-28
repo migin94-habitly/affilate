@@ -121,7 +121,8 @@ func (r *CommissionRepo) ApplyPendingRates(ctx context.Context, defaultSFPct flo
 		sfRate := p.gmvRate / defaultSFPct * 100
 		_, err := r.db.Exec(ctx, `
 			UPDATE tariffs
-			SET gmv_rate=$2, base_rate=$3, pending_gmv_rate=NULL, rate_effective_at=NULL, updated_at=NOW()
+			SET gmv_rate=$2, base_rate=$3, pending_gmv_rate=NULL, rate_effective_at=NULL,
+			    rate_change_reason=NULL, updated_at=NOW()
 			WHERE tier=$1`, p.tier, p.gmvRate, sfRate)
 		if err != nil {
 			return err
@@ -212,11 +213,11 @@ func (r *CommissionRepo) FlushToBalance(ctx context.Context, partnerID uuid.UUID
 	}
 
 	_, err = tx.Exec(ctx, `
-		INSERT INTO partner_balances (partner_id, available_amount)
-		VALUES ($1, $2)
-		ON CONFLICT (partner_id) DO UPDATE SET
-		  available_amount = partner_balances.available_amount + $2,
-		  updated_at = NOW()`, partnerID, total)
+		UPDATE partner_balances
+		SET pending_amount  = pending_amount  - $2,
+		    available_amount = available_amount + $2,
+		    updated_at = NOW()
+		WHERE partner_id = $1`, partnerID, total)
 	if err != nil {
 		return err
 	}

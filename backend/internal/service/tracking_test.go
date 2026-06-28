@@ -313,13 +313,16 @@ func TestRecordClick_AppendsClickParam(t *testing.T) {
 		&testutil.MockCommissionSvc{},
 	)
 
-	destURL, err := svc.RecordClick(context.Background(), clickID, "1.2.3.4", "Mozilla", "")
+	destURL, cookieExpires, err := svc.RecordClick(context.Background(), clickID, "1.2.3.4", "Mozilla", "")
 	if err != nil {
 		t.Fatalf("RecordClick error: %v", err)
 	}
 
 	if !strings.Contains(destURL, "tap_click="+clickID) {
 		t.Errorf("dest URL %q should contain tap_click param", destURL)
+	}
+	if cookieExpires.IsZero() {
+		t.Error("cookieExpires should not be zero")
 	}
 }
 
@@ -332,11 +335,14 @@ func TestRecordClick_UnknownClickID_ReturnsBase(t *testing.T) {
 		&testutil.MockCommissionSvc{},
 	)
 
-	destURL, err := svc.RecordClick(context.Background(), "unknown-click", "", "", "")
+	destURL, cookieExpires, err := svc.RecordClick(context.Background(), "unknown-click", "", "", "")
 	if err != nil {
 		t.Fatalf("RecordClick with unknown clickID error: %v", err)
 	}
 	if destURL != "https://ticketon.kz" {
 		t.Errorf("expected base URL for unknown click, got %s", destURL)
+	}
+	if cookieExpires.IsZero() {
+		t.Error("cookieExpires should not be zero even for unknown click")
 	}
 }
