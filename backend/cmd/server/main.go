@@ -85,6 +85,7 @@ func main() {
 	adminFraud := adminhandler.NewFraudHandler(trackingRepo)
 	adminEvents := adminhandler.NewAdminEventsHandler(eventRepo, adminRepo)
 	adminFAQ := adminhandler.NewAdminFAQHandler(faqRepo)
+	adminNotifs := adminhandler.NewAdminNotificationsHandler(notifRepo)
 
 	// Router
 	r := chi.NewRouter()
@@ -211,6 +212,10 @@ func main() {
 		r.Post("/api/v1/admin/contacts", adminFAQ.CreateContact)
 		r.Put("/api/v1/admin/contacts/{id}", adminFAQ.UpdateContact)
 		r.Delete("/api/v1/admin/contacts/{id}", adminFAQ.DeleteContact)
+
+		// Admin notifications
+		r.Get("/api/v1/admin/notifications", adminNotifs.List)
+		r.Post("/api/v1/admin/notifications/send", adminNotifs.Send)
 	})
 
 	srv := &http.Server{

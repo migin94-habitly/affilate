@@ -16,6 +16,7 @@ const IconFile      = icon(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2
 const IconShield    = icon(<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>)
 const IconHelp      = icon(<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></>)
 const IconTicket    = icon(<><path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 000-4V9z"/><line x1="9" y1="7" x2="9" y2="17"/></>)
+const IconBell      = icon(<><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></>)
 const IconMenu      = icon(<><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>)
 const IconLogOut    = icon(<path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>)
 const IconSun       = icon(<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></>)
@@ -31,8 +32,9 @@ const nav = [
   { to: '/commissions', label: 'Комиссии',        Icon: IconTrending },
   { to: '/payouts',     label: 'Выплаты',         Icon: IconCard     },
   { to: '/documents',   label: 'Документы',       Icon: IconFile     },
-  { to: '/fraud',       label: 'Антифрод',        Icon: IconShield   },
-  { to: '/faq',         label: 'FAQ & Контакты',  Icon: IconHelp     },
+  { to: '/notifications', label: 'Уведомления',     Icon: IconBell     },
+  { to: '/fraud',         label: 'Антифрод',        Icon: IconShield   },
+  { to: '/faq',           label: 'FAQ & Контакты',  Icon: IconHelp     },
 ]
 
 function ThemeDropdown() {
