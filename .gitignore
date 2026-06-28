@@ -10,3 +10,7 @@ backend/tap-server
 .idea/
 .vscode/
 *.swp
+
+# Playwright generated artifacts
+frontend/partner-portal/playwright-report/
+frontend/partner-portal/test-results/
