@@ -132,8 +132,8 @@ export function DashboardPage() {
 
   const onboardingSteps: OnboardingStep[] = [
     { id: 'account',   labelKey: 'onboarding.steps.account',   done: true },
-    { id: 'kyc',       labelKey: 'onboarding.steps.kyc',       done: !!profile?.kyc, linkTo: '/profile', linkLabelKey: 'onboarding.steps.kycLink' },
-    { id: 'offer',     labelKey: 'onboarding.steps.offer',     done: !!profile?.offer_accepted, linkTo: '/profile', linkLabelKey: 'onboarding.steps.offerLink' },
+    { id: 'kyc',       labelKey: 'onboarding.steps.kyc',       done: !!profile?.kyc, linkTo: '/profile#kyc', linkLabelKey: 'onboarding.steps.kycLink' },
+    { id: 'offer',     labelKey: 'onboarding.steps.offer',     done: !!profile?.offer_accepted, linkTo: '/profile#offer', linkLabelKey: 'onboarding.steps.offerLink' },
     { id: 'documents', labelKey: 'onboarding.steps.documents', done: !!(documents && documents.length > 0), linkTo: '/documents', linkLabelKey: 'onboarding.steps.documentsLink' },
   ]
 
