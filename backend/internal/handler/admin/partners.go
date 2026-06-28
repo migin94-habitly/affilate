@@ -38,6 +38,9 @@ func (h *PartnersHandler) List(w http.ResponseWriter, r *http.Request) {
 		handler.Error(w, err)
 		return
 	}
+	if partners == nil {
+		partners = []*domain.Partner{}
+	}
 	handler.JSON(w, http.StatusOK, map[string]interface{}{
 		"items":    partners,
 		"total":    total,

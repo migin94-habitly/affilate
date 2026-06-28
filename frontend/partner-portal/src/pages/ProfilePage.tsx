@@ -16,9 +16,9 @@ const tierGradients: Record<string, string> = {
 }
 
 const tierInfo: Record<string, { desc: string; next: string; emoji: string; rate: string }> = {
-  bronze: { desc: 'Базовая ставка от сервисного сбора', next: 'До Silver: 10 заказов в месяц', emoji: '🥉', rate: '15%' },
-  silver: { desc: 'Ставка от сервисного сбора', next: 'Работайте с командой для перехода на Gold', emoji: '🥈', rate: '20%' },
-  gold:   { desc: 'Кастомные условия', next: 'Максимальный уровень', emoji: '🥇', rate: '25–30%' },
+  bronze: { desc: '3% от GMV (объём продаж)', next: 'До Silver: 10 заказов в месяц', emoji: '🥉', rate: '3% GMV' },
+  silver: { desc: '5% от GMV (объём продаж)', next: 'Работайте с командой для перехода на Gold', emoji: '🥈', rate: '5% GMV' },
+  gold:   { desc: '7% от GMV (объём продаж)', next: 'Максимальный уровень', emoji: '🥇', rate: '7% GMV' },
 }
 
 export function ProfilePage() {

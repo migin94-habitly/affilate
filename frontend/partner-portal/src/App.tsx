@@ -14,6 +14,7 @@ import { PromoCodesPage } from '@/pages/PromoCodesPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
 import { FAQPage } from '@/pages/FAQPage'
 import { RequestsPage } from '@/pages/RequestsPage'
+import { TariffsPage } from '@/pages/TariffsPage'
 import '@/i18n'
 
 const qc = new QueryClient({
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
             <Route path="/faq"          element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
             <Route path="/requests"     element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
+            <Route path="/tariffs"      element={<ProtectedRoute><TariffsPage /></ProtectedRoute>} />
             <Route path="*"             element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>

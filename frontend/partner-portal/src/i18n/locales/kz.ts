@@ -16,6 +16,7 @@ export default {
   nav: {
     dashboard: 'Басты бет',
     events: 'Іс-шаралар',
+    tariffs: 'Тарифтер',
     links: 'Сілтемелер',
     promoCodes: 'Промокодтар',
     payouts: 'Төлемдер',

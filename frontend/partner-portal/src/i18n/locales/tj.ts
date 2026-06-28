@@ -16,6 +16,7 @@ export default {
   nav: {
     dashboard: 'Саҳифаи асосӣ',
     events: 'Тадбирҳо',
+    tariffs: 'Тарифҳо',
     links: 'Пайвандҳо',
     promoCodes: 'Промокодҳо',
     payouts: 'Пардохтҳо',

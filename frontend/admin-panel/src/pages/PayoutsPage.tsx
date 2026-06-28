@@ -4,11 +4,14 @@ import { getPayouts, updatePayoutStatus, exportPayouts } from '@/api/admin'
 import { Table, TD, Badge, Btn, Filter } from '@/components/ui'
 
 const statusVariant = (s: string) =>
-  s === 'paid_out' ? 'success' : s === 'processing' ? 'warning' : s === 'failed' ? 'danger' : 'default'
+  s === 'paid' ? 'success' : s === 'processing' ? 'warning' : s === 'failed' ? 'danger' : 'default'
+
+const statusLabel = (s: string) =>
+  s === 'requested' ? 'Ожидает' : s === 'processing' ? 'В обработке' : s === 'paid' ? 'Выплачено' : s === 'failed' ? 'Ошибка' : s
 
 export function PayoutsPage() {
   const qc = useQueryClient()
-  const [status, setStatus] = useState('pending')
+  const [status, setStatus] = useState('requested')
   const [page, setPage] = useState(1)
   const [exporting, setExporting] = useState(false)
 
@@ -53,9 +56,9 @@ export function PayoutsPage() {
         <Filter label="Статус" value={status} onChange={v => { setStatus(v); setPage(1) }}
           options={[
             { value: '', label: 'Все' },
-            { value: 'pending', label: 'Ожидает' },
+            { value: 'requested', label: 'Ожидает' },
             { value: 'processing', label: 'В обработке' },
-            { value: 'paid_out', label: 'Выплачено' },
+            { value: 'paid', label: 'Выплачено' },
             { value: 'failed', label: 'Ошибка' }
           ]} />
       </div>
@@ -76,10 +79,10 @@ export function PayoutsPage() {
               <TD className="text-xs font-mono text-gray-500">{p.freedom_pay_account ?? '—'}</TD>
               <TD className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString('ru-RU')}</TD>
               <TD className="text-xs text-gray-400">{new Date(p.updated_at).toLocaleDateString('ru-RU')}</TD>
-              <TD><Badge label={p.status} variant={statusVariant(p.status) as any} /></TD>
+              <TD><Badge label={statusLabel(p.status)} variant={statusVariant(p.status) as any} /></TD>
               <TD>
                 <div className="flex gap-1">
-                  {p.status === 'pending' && (
+                  {p.status === 'requested' && (
                     <Btn size="sm"
                       loading={statusMutation.isPending}
                       onClick={() => statusMutation.mutate({ id: p.id, s: 'processing' })}>
@@ -90,7 +93,7 @@ export function PayoutsPage() {
                     <>
                       <Btn size="sm"
                         loading={statusMutation.isPending}
-                        onClick={() => statusMutation.mutate({ id: p.id, s: 'paid_out' })}>
+                        onClick={() => statusMutation.mutate({ id: p.id, s: 'paid' })}>
                         Выплачено
                       </Btn>
                       <Btn size="sm" variant="danger"

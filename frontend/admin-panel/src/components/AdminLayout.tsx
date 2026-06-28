@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAdminAuth } from '@/store/auth'
 import { useThemeStore, type ThemeMode } from '@/store/theme'
+import { getAdminRequestStats } from '@/api/admin'
 
 type IconProps = { className?: string }
 const icon = (d: React.ReactNode) => ({ className = 'w-5 h-5' }: IconProps) => (
@@ -25,6 +27,7 @@ const IconMonitor   = icon(<><rect x="2" y="3" width="20" height="14" rx="2"/><p
 const IconChevRight = icon(<path d="M9 18l6-6-6-6"/>)
 const IconChevLeft  = icon(<path d="M15 18l-6-6 6-6"/>)
 const IconInbox     = icon(<><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></>)
+const IconUser      = icon(<><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>)
 
 const nav = [
   { to: '/dashboard',   label: 'Дашборд',        Icon: IconGrid     },
@@ -37,6 +40,7 @@ const nav = [
   { to: '/requests',      label: 'Запросы',         Icon: IconInbox    },
   { to: '/fraud',         label: 'Антифрод',        Icon: IconShield   },
   { to: '/faq',           label: 'FAQ & Контакты',  Icon: IconHelp     },
+  { to: '/profile',       label: 'Профиль',         Icon: IconUser     },
 ]
 
 function ThemeDropdown() {
@@ -89,6 +93,30 @@ function ThemeDropdown() {
         </div>
       )}
     </div>
+  )
+}
+
+function RequestsBell() {
+  const navigate = useNavigate()
+  const { data } = useQuery({
+    queryKey: ['admin-request-stats'],
+    queryFn: getAdminRequestStats,
+    refetchInterval: 30_000,
+  })
+  const newCount = data?.new ?? 0
+  return (
+    <button
+      onClick={() => navigate('/requests')}
+      title="Входящие запросы"
+      className="relative p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-all"
+    >
+      <IconBell className="w-4 h-4" />
+      {newCount > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-brand-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+          {newCount > 99 ? '99+' : newCount}
+        </span>
+      )}
+    </button>
   )
 }
 
@@ -201,9 +229,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <RequestsBell />
             <ThemeDropdown />
             {admin && (
-              <div className="flex items-center gap-2 text-sm pl-2 border-l border-gray-100 dark:border-gray-800">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 text-sm pl-2 border-l border-gray-100 dark:border-gray-800 hover:opacity-80 transition-opacity"
+              >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
                   {(admin.full_name || admin.email)?.charAt(0)?.toUpperCase()}
                 </div>
@@ -211,7 +243,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[120px]">{admin.full_name || admin.email}</p>
                   <p className="text-[10px] text-gray-400 uppercase">{admin.role}</p>
                 </div>
-              </div>
+              </button>
             )}
           </div>
         </header>

@@ -16,6 +16,7 @@ export default {
   nav: {
     dashboard: 'Дашборд',
     events: 'События',
+    tariffs: 'Тарифы',
     links: 'Ссылки',
     promoCodes: 'Промокоды',
     payouts: 'Выплаты',

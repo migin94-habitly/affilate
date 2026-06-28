@@ -16,6 +16,7 @@ export default {
   nav: {
     dashboard: 'Dashboard',
     events: 'Events',
+    tariffs: 'Tariffs',
     links: 'Links',
     promoCodes: 'Promo Codes',
     payouts: 'Payouts',

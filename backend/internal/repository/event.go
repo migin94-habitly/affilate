@@ -206,6 +206,42 @@ func (r *EventRepo) SetActive(ctx context.Context, id uuid.UUID, isActive bool) 
 	return err
 }
 
+func (r *EventRepo) GetAllCities(ctx context.Context) ([]string, error) {
+	rows, err := r.db.Query(ctx,
+		"SELECT DISTINCT city FROM events WHERE city != '' ORDER BY city")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var cities []string
+	for rows.Next() {
+		var c string
+		if err := rows.Scan(&c); err != nil {
+			return nil, err
+		}
+		cities = append(cities, c)
+	}
+	return cities, nil
+}
+
+func (r *EventRepo) GetAllCategories(ctx context.Context) ([]string, error) {
+	rows, err := r.db.Query(ctx,
+		"SELECT DISTINCT category FROM events WHERE category != '' ORDER BY category")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var cats []string
+	for rows.Next() {
+		var c string
+		if err := rows.Scan(&c); err != nil {
+			return nil, err
+		}
+		cats = append(cats, c)
+	}
+	return cats, nil
+}
+
 func (r *EventRepo) GetCities(ctx context.Context) ([]string, error) {
 	rows, err := r.db.Query(ctx,
 		"SELECT DISTINCT city FROM events WHERE is_active=TRUE AND city != '' ORDER BY city")
