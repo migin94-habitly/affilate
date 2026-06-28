@@ -77,6 +77,15 @@ export const getFraudSignals = () =>
 export const getAdminEvents = (params: any) =>
   api.get('/admin/events', { params }).then(r => r.data)
 
+export const upsertAdminEvent = (data: any) =>
+  api.post('/admin/events', data).then(r => r.data)
+
+export const setAdminEventActive = (id: string, is_active: boolean) =>
+  api.patch(`/admin/events/${id}/active`, { is_active }).then(r => r.data)
+
+export const setAdminEventSpecialRate = (id: string, special_rate: number | null, reason?: string) =>
+  api.patch(`/admin/events/${id}/special-rate`, { special_rate, reason }).then(r => r.data)
+
 // FAQ
 export const getFAQ = () =>
   api.get('/admin/faq').then(r => r.data)

@@ -10,6 +10,7 @@ import { CommissionsPage } from '@/pages/CommissionsPage'
 import { PayoutsPage } from '@/pages/PayoutsPage'
 import { DocumentsPage } from '@/pages/DocumentsPage'
 import { FraudPage } from '@/pages/FraudPage'
+import { EventsPage } from '@/pages/EventsPage'
 import { FAQPage } from '@/pages/FAQPage'
 
 const qc = new QueryClient({
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/" element={<ProtectedRoute><AdminLayout><DashboardPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/dashboard"   element={<ProtectedRoute><AdminLayout><DashboardPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/partners"    element={<ProtectedRoute><AdminLayout><PartnersPage /></AdminLayout></ProtectedRoute>} />
+            <Route path="/events"      element={<ProtectedRoute><AdminLayout><EventsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/commissions" element={<ProtectedRoute><AdminLayout><CommissionsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/payouts"     element={<ProtectedRoute><AdminLayout><PayoutsPage /></AdminLayout></ProtectedRoute>} />
             <Route path="/documents"   element={<ProtectedRoute><AdminLayout><DocumentsPage /></AdminLayout></ProtectedRoute>} />
