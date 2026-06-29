@@ -80,6 +80,10 @@ func (s *PayoutService) ListAll(ctx context.Context, filter repository.PayoutFil
 	return s.payoutRepo.ListAll(ctx, filter)
 }
 
+func (s *PayoutService) ListAllAdmin(ctx context.Context, filter repository.PayoutFilter) ([]*repository.AdminPayoutRow, int64, error) {
+	return s.payoutRepo.ListAllAdmin(ctx, filter)
+}
+
 func (s *PayoutService) UpdateStatus(ctx context.Context, id uuid.UUID, status domain.PayoutStatus, ref *string) error {
 	return s.payoutRepo.UpdateStatus(ctx, id, status, ref)
 }

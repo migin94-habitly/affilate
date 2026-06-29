@@ -93,7 +93,7 @@ export function RequestsPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: () => createRequest(form),
+    mutationFn: (data: { type: string; subject: string; body: string }) => createRequest(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['requests'] })
       setShowForm(false)
@@ -109,7 +109,7 @@ export function RequestsPage() {
       return
     }
     setFormError('')
-    createMutation.mutate()
+    createMutation.mutate(form)
   }
 
   return (

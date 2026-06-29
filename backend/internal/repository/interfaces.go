@@ -36,6 +36,7 @@ type PayoutRepoIface interface {
 	Create(ctx context.Context, p *domain.Payout) error
 	GetByPartner(ctx context.Context, partnerID uuid.UUID, page, perPage int) ([]*domain.Payout, int64, error)
 	ListAll(ctx context.Context, filter PayoutFilter) ([]*domain.Payout, int64, error)
+	ListAllAdmin(ctx context.Context, filter PayoutFilter) ([]*AdminPayoutRow, int64, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status domain.PayoutStatus, ref *string) error
 	ExportPending(ctx context.Context) ([]*PayoutExportRow, error)
 }
