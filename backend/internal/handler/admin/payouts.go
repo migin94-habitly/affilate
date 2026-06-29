@@ -32,7 +32,7 @@ func (h *AdminPayoutsHandler) List(w http.ResponseWriter, r *http.Request) {
 		PerPage: handler.IntQuery(r, "per_page", 20),
 	}
 
-	items, total, err := h.payoutSvc.ListAll(r.Context(), filter)
+	items, total, err := h.payoutSvc.ListAllAdmin(r.Context(), filter)
 	if err != nil {
 		handler.Error(w, err)
 		return

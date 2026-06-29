@@ -220,6 +220,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
+            {/* Tariffs link */}
+            <NavLink
+              to="/tariffs"
+              className={({ isActive }) =>
+                `hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150
+                ${isActive
+                  ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400'
+                  : 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-sm hover:opacity-90'
+                }`
+              }
+            >
+              <IconTrendingUp className="w-3.5 h-3.5" />
+              {t('nav.tariffs')}
+            </NavLink>
+
             {/* Theme toggle */}
             <ThemeToggle />
 

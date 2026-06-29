@@ -4,12 +4,31 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ticketon/tap/internal/domain"
 )
+
+type AdminPayoutRow struct {
+	ID                uuid.UUID  `json:"id"`
+	PartnerID         uuid.UUID  `json:"partner_id"`
+	PartnerName       string     `json:"partner_name"`
+	PartnerEmail      string     `json:"partner_email"`
+	Amount            float64    `json:"amount"`
+	Currency          string     `json:"currency"`
+	FreedomPayAccount string     `json:"freedom_pay_account"`
+	BankName          *string    `json:"bank_name,omitempty"`
+	BankAccount       *string    `json:"bank_account,omitempty"`
+	Status            string     `json:"status"`
+	FreedomPayRef     *string    `json:"freedom_pay_ref,omitempty"`
+	RequestedAt       time.Time  `json:"requested_at"`
+	ProcessedAt       *time.Time `json:"processed_at,omitempty"`
+	PaidAt            *time.Time `json:"paid_at,omitempty"`
+	Notes             *string    `json:"notes,omitempty"`
+}
 
 type PayoutRepo struct {
 	db *pgxpool.Pool
@@ -109,6 +128,52 @@ func (r *PayoutRepo) ListAll(ctx context.Context, filter PayoutFilter) ([]*domai
 	}
 	defer rows.Close()
 	return scanPayouts(rows, total)
+}
+
+func (r *PayoutRepo) ListAllAdmin(ctx context.Context, filter PayoutFilter) ([]*AdminPayoutRow, int64, error) {
+	where := "WHERE 1=1"
+	args := []interface{}{}
+	i := 1
+
+	if filter.Status != "" {
+		where += fmt.Sprintf(" AND py.status=$%d", i)
+		args = append(args, filter.Status)
+		i++
+	}
+
+	var total int64
+	r.db.QueryRow(ctx, "SELECT COUNT(*) FROM payouts py "+where, args...).Scan(&total)
+
+	offset := (filter.Page - 1) * filter.PerPage
+	args = append(args, filter.PerPage, offset)
+	rows, err := r.db.Query(ctx, `
+		SELECT py.id, py.partner_id, p.full_name, p.email,
+		       py.amount, py.currency, py.freedom_pay_account,
+		       k.bank_name, k.bank_account,
+		       py.status, py.freedom_pay_ref, py.requested_at, py.processed_at, py.paid_at, py.notes
+		FROM payouts py
+		JOIN partners p ON p.id = py.partner_id
+		LEFT JOIN partner_kyc k ON k.partner_id = py.partner_id
+		`+where+fmt.Sprintf(" ORDER BY py.requested_at DESC LIMIT $%d OFFSET $%d", i, i+1), args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var items []*AdminPayoutRow
+	for rows.Next() {
+		row := &AdminPayoutRow{}
+		if err := rows.Scan(
+			&row.ID, &row.PartnerID, &row.PartnerName, &row.PartnerEmail,
+			&row.Amount, &row.Currency, &row.FreedomPayAccount,
+			&row.BankName, &row.BankAccount,
+			&row.Status, &row.FreedomPayRef, &row.RequestedAt, &row.ProcessedAt, &row.PaidAt, &row.Notes,
+		); err != nil {
+			return nil, 0, err
+		}
+		items = append(items, row)
+	}
+	return items, total, nil
 }
 
 func (r *PayoutRepo) UpdateStatus(ctx context.Context, id uuid.UUID, status domain.PayoutStatus, ref *string) error {

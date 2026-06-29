@@ -113,13 +113,14 @@ function EventCard({ event, onSelect, index }: { event: Event; onSelect: () => v
               href={event.base_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 inline-flex items-center justify-center px-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
-              title="Открыть событие"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-200 dark:hover:border-brand-500/30 transition-colors"
+              title="Открыть событие на Ticketon"
               onClick={e => e.stopPropagation()}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
+              Открыть
             </a>
           )}
         </div>
@@ -174,6 +175,7 @@ export function EventsPage() {
   const generateMutation = useMutation({
     mutationFn: (eventId: string) => generateLink({ event_id: eventId, channel }),
     onSuccess: link => setGeneratedLink(link),
+    onError: (err: any) => showToast(err.response?.data?.error || 'Ошибка генерации ссылки', 'error'),
   })
 
   // Unique tracking URL copy with toast

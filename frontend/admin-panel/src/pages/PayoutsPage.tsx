@@ -66,19 +66,35 @@ export function PayoutsPage() {
       {isLoading ? (
         <div className="text-center py-10 text-gray-400">Загрузка...</div>
       ) : (
-        <Table headers={['Партнёр', 'Сумма', 'Freedom Pay', 'Запрошено', 'Обновлено', 'Статус', 'Действия']}>
+        <Table headers={['Партнёр', 'Сумма', 'Freedom Pay / Банк', 'Ref', 'Запрошено', 'Исполнено', 'Статус', 'Действия']}>
           {data?.items?.map((p: any) => (
             <tr key={p.id}>
               <TD>
                 <div>
-                  <p className="font-medium text-gray-900">{p.partner_name ?? '—'}</p>
-                  <p className="text-xs text-gray-400 font-mono">{p.partner_id.slice(0, 8)}...</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{p.partner_name || '—'}</p>
+                  <p className="text-xs text-gray-400">{p.partner_email || '—'}</p>
                 </div>
               </TD>
               <TD className="font-semibold text-green-600">{fmt(p.amount)} ₸</TD>
-              <TD className="text-xs font-mono text-gray-500">{p.freedom_pay_account ?? '—'}</TD>
-              <TD className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString('ru-RU')}</TD>
-              <TD className="text-xs text-gray-400">{new Date(p.updated_at).toLocaleDateString('ru-RU')}</TD>
+              <TD>
+                <div>
+                  <p className="text-xs font-mono text-gray-700 dark:text-gray-300">{p.freedom_pay_account || '—'}</p>
+                  {p.bank_name && (
+                    <p className="text-xs text-gray-400 mt-0.5">{p.bank_name}{p.bank_account ? ` · ${p.bank_account}` : ''}</p>
+                  )}
+                </div>
+              </TD>
+              <TD className="text-xs font-mono text-gray-400">{p.freedom_pay_ref || '—'}</TD>
+              <TD className="text-xs text-gray-400 whitespace-nowrap">
+                {p.requested_at ? new Date(p.requested_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
+              </TD>
+              <TD className="text-xs text-gray-400 whitespace-nowrap">
+                {p.paid_at
+                  ? new Date(p.paid_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                  : p.processed_at
+                    ? new Date(p.processed_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                    : '—'}
+              </TD>
               <TD><Badge label={statusLabel(p.status)} variant={statusVariant(p.status) as any} /></TD>
               <TD>
                 <div className="flex gap-1">
@@ -102,6 +118,9 @@ export function PayoutsPage() {
                         Ошибка
                       </Btn>
                     </>
+                  )}
+                  {p.notes && (
+                    <span className="text-xs text-gray-400 italic ml-1 truncate max-w-[100px]" title={p.notes}>{p.notes}</span>
                   )}
                 </div>
               </TD>
